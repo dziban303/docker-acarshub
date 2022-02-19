@@ -156,10 +156,15 @@ export interface search_html_msg {
 }
 
 export interface plane {
-  identifiers: string[];
+  identifiers: string[]; // TODO: remove me
+  callsign?: string;
+  hex?: string;
+  tail?: string;
   has_alerts: boolean;
   num_alerts: number;
-  messages: acars_msg[];
+  messages?: acars_msg[];
+  position?: adsb_plane;
+  last_updated?: number;
 }
 
 export interface acars_msg {
