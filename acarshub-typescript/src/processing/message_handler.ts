@@ -1,10 +1,35 @@
-import { adsb, adsb_plane, aircraft_icon, plane } from "src/interfaces";
+import {
+  adsb,
+  adsb_plane,
+  adsb_target,
+  aircraft_icon,
+  plane,
+} from "src/interfaces";
 
 class MessageHandler {
   planes: Array<plane> = [];
   adsb_last_update_time: number = 0;
 
-  constructor() {}
+  constructor() {
+    this.planes = [];
+    this.planes.unshift = (p: plane) => {
+      if (this.planes.length >= 50) {
+        let indexes_to_delete = [];
+        for (let i = 49; i < this.planes.length; i++) {
+          if (!this.planes[i].last_updated) {
+            indexes_to_delete.push(i);
+          }
+        }
+
+        indexes_to_delete
+          .sort((a, b) => b - a)
+          .forEach((index) => {
+            this.planes.splice(index, 1);
+          });
+      }
+      return this.planes.unshift.apply(this.planes, [p]);
+    };
+  }
 
   acars_message() {}
 
