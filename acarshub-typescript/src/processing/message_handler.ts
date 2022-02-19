@@ -1,14 +1,7 @@
 import { MessageDecoder } from "@airframes/acars-decoder/dist/MessageDecoder";
-import {
-  acars_msg,
-  adsb,
-  adsb_plane,
-  adsb_target,
-  aircraft_icon,
-  plane,
-} from "src/interfaces";
+import { acars_msg, adsb, adsb_plane, plane } from "src/interfaces";
 
-class MessageHandler {
+export class MessageHandler {
   planes: Array<plane> = [];
   adsb_last_update_time: number = 0;
   lm_md = new MessageDecoder();
@@ -34,7 +27,9 @@ class MessageHandler {
     // Overload the unshift operator for the planes array
     // The array should keep only 50 planes with messages if they DO NOT
     // have an ADSB position
-    this.planes.unshift = (p: plane) => {
+    // @ts-expect-error
+    this.planes.prepend = (p: plane) => {
+      console.log(this.planes.length);
       if (this.planes.length >= 50) {
         let indexes_to_delete: Array<number> = []; // All of the indexes with messages and ADSB positions
 
@@ -44,9 +39,10 @@ class MessageHandler {
         });
 
         // Only delete any in excess of 50
-        const index_to_splice: number = indexes_to_delete.length > 50 ? 50 : 0;
-
-        if (index_to_splice === 50) {
+        const index_to_splice: number =
+          indexes_to_delete.length > 50 ? indexes_to_delete.length - 49 : 0;
+        console.log("j", index_to_splice);
+        if (index_to_splice > 0) {
           indexes_to_delete
             .splice(0, index_to_splice) // remove all of the "new" planes
             .sort((a, b) => b - a) // reverse the sort so we don't fuck up the indexes we've saved relative to the old array
@@ -67,7 +63,8 @@ class MessageHandler {
     if (plane) {
       this.update_plane_message(msg, plane);
     } else {
-      this.planes.push({
+      // @ts-expect-error
+      this.planes.prepend({
         callsign: callsign,
         hex: hex,
         tail: tail,
@@ -79,6 +76,8 @@ class MessageHandler {
         last_updated: this.adsb_last_update_time,
       });
     }
+
+    console.log(this.planes.length);
   }
 
   adsb_message(adsb_positions: adsb) {
@@ -92,7 +91,7 @@ class MessageHandler {
       if (plane) {
         this.update_plane_position(target, plane);
       } else {
-        this.planes.push({
+        this.planes.unshift({
           callsign: callsign,
           hex: hex,
           tail: tail,
@@ -279,19 +278,24 @@ class MessageHandler {
     hex: string | null = null,
     tail: string | null = null
   ) {
-    Object.values(this.planes).forEach((plane, index) => {
+    let plane_index = undefined;
+    Object.values(this.planes).every((plane, index) => {
       if (callsign && plane.callsign === callsign) {
-        return index;
+        plane_index = index;
+        return false;
       }
       if (hex && plane.hex === hex) {
-        return index;
+        plane_index = index;
+        return false;
       }
       if (tail && plane.tail === tail) {
-        return index;
+        plane_index = index;
+        return false;
       }
+      return true;
     });
 
-    return undefined;
+    return plane_index;
   }
 
   get_callsign_from_adsb(plane: adsb_plane): string {
@@ -309,7 +313,7 @@ class MessageHandler {
   }
 
   get_callsign_from_acars(msg: acars_msg): string | undefined {
-    if (msg.flight) return msg.flight;
+    if (msg.icao_flight) return msg.icao_flight;
     return undefined;
   }
 
