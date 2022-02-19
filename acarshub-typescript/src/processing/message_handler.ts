@@ -26,11 +26,11 @@ class MessageHandler {
         });
 
         // Only delete any in excess of 50
-        const index_to_splice = indexes_to_delete.length > 50 ? 49 : 0;
+        const index_to_splice: number = indexes_to_delete.length > 50 ? 50 : 0;
 
-        if (index_to_splice) {
+        if (index_to_splice === 50) {
           indexes_to_delete
-            .splice(index_to_splice) // remove all of the "new" planes
+            .splice(0, index_to_splice) // remove all of the "new" planes
             .sort((a, b) => b - a) // reverse the sort so we don't fuck up the indexes we've saved relative to the old array
             .forEach((index) => {
               this.planes.splice(index, 1);
