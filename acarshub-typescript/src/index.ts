@@ -42,8 +42,6 @@ import {
 
 import "jquery";
 
-// import 'bootstrap'
-import "bootstrap/dist/css/bootstrap.min.css";
 import "./css/leaftlet.legend.css";
 import "leaflet/dist/leaflet.css";
 import "jbox/dist/jBox.all.css";
@@ -59,14 +57,63 @@ let index_acars_url: string = "";
 let index_acars_path: string = "";
 let index_acars_page: string = "";
 
+let adsb_enabled = false;
+let adsb_url: string = "";
+let adsb_interval: any;
+let adsb_getting_data: boolean = false;
+let adsb_request_options = {
+  method: "GET",
+} as RequestInit;
+
 let msg_handler = new MessageHandler();
 
 $((): void => {
+  const menuIconButton = document.querySelector("[data-menu-icon-btn]");
+  const sidebar = document.querySelector("[data-sidebar]");
+
+  if (menuIconButton && sidebar) {
+    menuIconButton.addEventListener("click", () => {
+      sidebar.classList.toggle("open");
+    });
+  }
   index_acars_path += index_acars_path.endsWith("/") ? "" : "/";
   index_acars_url = document.location.origin + index_acars_path;
   socket = io(`${document.location.origin}/main`, {
     path: index_acars_path + "socket.io",
   });
+
+  socket.on("features_enabled", function (msg: decoders): void {
+    adsb_url = index_acars_url + "data/aircraft.json";
+    if (msg.adsb.enabled === true) {
+      if (msg.adsb.bypass) {
+        adsb_url = msg.adsb.url;
+        adsb_request_options["mode"] = "cors";
+      }
+
+      // Check to see if the adsb interval already exists.
+      // We want to do this because if the client disconnects it will
+      // receive all of the 'on connect' data again, and another adsb interval
+      // would be spawned.
+
+      if (!adsb_interval) {
+        update_adsb();
+        adsb_interval = setInterval(() => {
+          update_adsb();
+        }, 5000);
+      }
+    } else {
+      adsb_enabled = false;
+    }
+
+    // If for some reason ADSB was ever turned off on the back end and was enabled for the client, turn off the updater
+    // And update the web app to remove menu and destroy costly background assets
+    if (!msg.adsb.enabled && adsb_interval != null) {
+      adsb_enabled = false;
+      clearInterval(adsb_interval);
+      adsb_interval = null;
+    }
+  });
+
   socket.on("acars_msg", function (msg: html_msg) {
     // New acars message.
     msg_handler.acars_message(msg.msghtml);
@@ -129,3 +176,16 @@ $((): void => {
     console.error(e);
   });
 });
+
+async function update_adsb(): Promise<void> {
+  fetch(adsb_url, adsb_request_options)
+    .then((response) => {
+      adsb_getting_data = true;
+      return response.json();
+    })
+    .then((planes) => msg_handler.adsb_message(planes as adsb))
+    .catch((err) => {
+      adsb_getting_data = false;
+      console.error(err);
+    });
+}
