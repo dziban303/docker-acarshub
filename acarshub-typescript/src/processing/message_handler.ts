@@ -29,7 +29,6 @@ export class MessageHandler {
     // have an ADSB position
     // @ts-expect-error
     this.planes.prepend = (p: plane) => {
-      console.log(this.planes.length);
       if (this.planes.length >= 50) {
         let indexes_to_delete: Array<number> = []; // All of the indexes with messages and ADSB positions
 
@@ -41,7 +40,7 @@ export class MessageHandler {
         // Only delete any in excess of 50
         const index_to_splice: number =
           indexes_to_delete.length > 50 ? indexes_to_delete.length - 49 : 0;
-        console.log("j", index_to_splice);
+
         if (index_to_splice > 0) {
           indexes_to_delete
             .splice(0, index_to_splice) // remove all of the "new" planes
@@ -61,7 +60,7 @@ export class MessageHandler {
     const tail = this.get_tail_from_acars(msg);
     const plane = this.match_plane_from_id(callsign, hex, tail);
     if (plane) {
-      this.update_plane_message(msg, plane);
+      return this.update_plane_message(msg, plane);
     } else {
       // @ts-expect-error
       this.planes.prepend({
@@ -77,7 +76,7 @@ export class MessageHandler {
       });
     }
 
-    console.log(this.planes.length);
+    return undefined;
   }
 
   adsb_message(adsb_positions: adsb) {
