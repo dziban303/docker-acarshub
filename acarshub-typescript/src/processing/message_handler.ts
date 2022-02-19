@@ -12,20 +12,30 @@ class MessageHandler {
 
   constructor() {
     this.planes = [];
+
+    // Overload the unshift operator for the planes array
+    // The array should keep only 50 planes with messages if they DO NOT
+    // have an ADSB position
     this.planes.unshift = (p: plane) => {
       if (this.planes.length >= 50) {
-        let indexes_to_delete = [];
-        for (let i = 49; i < this.planes.length; i++) {
-          if (!this.planes[i].last_updated) {
-            indexes_to_delete.push(i);
-          }
-        }
+        let indexes_to_delete: Array<number> = []; // All of the indexes with messages and ADSB positions
 
-        indexes_to_delete
-          .sort((a, b) => b - a)
-          .forEach((index) => {
-            this.planes.splice(index, 1);
-          });
+        // Find all of the planes with no ADSB position and messages
+        this.planes.forEach((plane, index) => {
+          if (!plane.position && plane.messages) indexes_to_delete.push(index);
+        });
+
+        // Only delete any in excess of 50
+        const index_to_splice = indexes_to_delete.length > 50 ? 49 : 0;
+
+        if (index_to_splice) {
+          indexes_to_delete
+            .splice(index_to_splice) // remove all of the "new" planes
+            .sort((a, b) => b - a) // reverse the sort so we don't fuck up the indexes we've saved relative to the old array
+            .forEach((index) => {
+              this.planes.splice(index, 1);
+            });
+        }
       }
       return this.planes.unshift.apply(this.planes, [p]);
     };
