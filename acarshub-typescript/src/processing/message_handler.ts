@@ -1,3 +1,19 @@
+// Copyright (C) 2022 Frederick Clausen II
+// This file is part of acarshub <https://github.com/sdr-enthusiasts/docker-acarshub>.
+
+// acarshub is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// acarshub is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with acarshub.  If not, see <http://www.gnu.org/licenses/>.
+
 import { MessageDecoder } from "@airframes/acars-decoder/dist/MessageDecoder";
 import { acars_msg, adsb, adsb_plane, plane } from "src/interfaces";
 
@@ -58,25 +74,37 @@ export class MessageHandler {
     const callsign = this.get_callsign_from_acars(msg);
     const hex = this.get_hex_from_acars(msg);
     const tail = this.get_tail_from_acars(msg);
-    const plane = this.match_plane_from_id(callsign, hex, tail);
-    if (plane) {
-      return this.update_plane_message(msg, plane);
+    const plane = this.match_plane_from_id(callsign, hex, tail, true);
+    console.log("This is the input values: ", hex, tail, callsign, plane);
+    if (typeof plane !== "undefined") {
+      this.update_plane_message(msg, plane);
+
+      this.planes.forEach((item, i) => {
+        if (i == plane) {
+          this.planes.splice(i, 1);
+          // @ts-expect-error
+          this.planes.prepend(item);
+        }
+      });
+
+      this.update_values_from_acars();
     } else {
+      msg.uid = this.getRandomInt(1000000).toString(); // Each message gets a unique ID. Used to track tab selection
       // @ts-expect-error
       this.planes.prepend({
         callsign: callsign,
         hex: hex,
         tail: tail,
         position: undefined,
-        identifiers: [], // TODO REMOVE ME
         messages: [msg],
         has_alerts: false,
         num_alerts: 0,
-        last_updated: this.adsb_last_update_time,
+        last_updated: 0,
+        uid: this.getRandomInt(1000000).toString(),
       });
     }
 
-    return undefined;
+    return this.planes[0].uid;
   }
 
   adsb_message(adsb_positions: adsb) {
@@ -87,7 +115,7 @@ export class MessageHandler {
       const hex = this.get_hex_from_adsb(target);
       const tail = this.get_tail_from_adsb(target);
       const plane = this.match_plane_from_id(callsign, hex, tail);
-      if (plane) {
+      if (typeof plane !== "undefined") {
         this.update_plane_position(target, plane);
       } else {
         this.planes.unshift({
@@ -95,11 +123,11 @@ export class MessageHandler {
           hex: hex,
           tail: tail,
           position: target,
-          identifiers: [], // TODO REMOVE ME
           messages: [],
           has_alerts: false,
           num_alerts: 0,
           last_updated: this.adsb_last_update_time,
+          uid: this.getRandomInt(1000000).toString(),
         });
       }
     });
@@ -117,17 +145,50 @@ export class MessageHandler {
     });
   }
 
+  update_values_from_acars() {
+    // @ts-expect-error
+    if (
+      (this.planes[0].callsign == "" ||
+        typeof this.planes[0].callsign === "undefined") &&
+      this.get_callsign_from_acars(this.planes[0].messages[0]) != ""
+    ) {
+      // @ts-expect-error
+      this.planes[0].callsign = this.get_callsign_from_acars(
+        this.planes[0].messages[0]
+      );
+    }
+    // @ts-expect-error
+    if (
+      (this.planes[0].hex == "" || typeof this.planes[0].hex === "undefined") &&
+      this.get_hex_from_acars(this.planes[0].messages[0]) != ""
+    ) {
+      // @ts-expect-error
+      this.planes[0].hex = this.get_hex_from_acars(this.planes[0].messages[0]);
+    }
+
+    // @ts-expect-error
+    if (
+      (this.planes[0].tail == "" ||
+        typeof this.planes[0].tail === "undefined") &&
+      this.get_tail_from_acars(this.planes[0].messages[0]) != ""
+    ) {
+      // @ts-expect-error
+      this.planes[0].tail = this.get_tail_from_acars(
+        this.planes[0].messages[0]
+      );
+    }
+  }
+
   update_plane_message(new_msg: acars_msg, index: number) {
     if (typeof this.planes[index].messages === "undefined") {
       this.planes[index].messages = [new_msg];
       return;
     }
     let rejected = false;
-    let move_or_delete_id: undefined | string = undefined;
 
     // TODO: add in alert matching
     let matched = { was_found: false };
-
+    new_msg.uid = this.getRandomInt(1000000).toString(); // Each message gets a unique ID. Used to track tab selection
     // TODO: remove this ! check for TS
     for (let message of this.planes[index].messages!) {
       // First check is to see if the message is the same by checking all fields and seeing if they match
@@ -140,9 +201,6 @@ export class MessageHandler {
         message.timestamp = new_msg.timestamp;
         message.duplicates = String(Number(message.duplicates || 0) + 1);
         rejected = true;
-        move_or_delete_id =
-          this.planes[index].messages![this.planes[index].messages!.length - 1]
-            .uid;
       } else if (
         // check if text fields are the same
         "text" in message &&
@@ -153,9 +211,6 @@ export class MessageHandler {
         message.timestamp = new_msg.timestamp;
         message.duplicates = String(Number(message.duplicates || 0) + 1);
         rejected = true;
-        move_or_delete_id =
-          this.planes[index].messages![this.planes[index].messages!.length - 1]
-            .uid;
       } else if (
         new_msg.station_id == message.station_id && // Is the message from the same station id? Keep ACARS/VDLM separate
         new_msg.timestamp - message.timestamp < 8.0 && // We'll assume the message is not a multi-part message if the time from the new message is too great from the rest of the group
@@ -168,9 +223,6 @@ export class MessageHandler {
         // This check matches if the group is a AAAz counter
         // We have a multi part message. Now we need to see if it is a dup
         rejected = true;
-        move_or_delete_id =
-          this.planes[index].messages![this.planes[index].messages!.length - 1]
-            .uid;
         let add_multi = true;
 
         if ("msgno_parts" in message) {
@@ -248,7 +300,16 @@ export class MessageHandler {
         break;
       }
     }
-    return move_or_delete_id;
+
+    if (!rejected) {
+      if (!this.planes[index].messages) this.planes[index].messages = [];
+      this.planes[index].messages!.unshift(new_msg);
+    }
+
+    console.log(
+      "This is the final message count after processing: ",
+      this.planes[index].messages?.length
+    );
   }
 
   check_for_dup(message: acars_msg, new_msg: acars_msg): boolean {
@@ -270,30 +331,38 @@ export class MessageHandler {
 
     this.planes[index].position = plane;
     this.planes[index].last_updated = this.adsb_last_update_time;
+    this.planes[index].hex = this.get_hex_from_adsb(plane);
+    this.planes[index].callsign = this.get_callsign_from_adsb(plane);
+    this.planes[index].tail = this.get_tail_from_adsb(plane);
   }
 
   match_plane_from_id(
     callsign: string | null = null,
     hex: string | null = null,
-    tail: string | null = null
+    tail: string | null = null,
+    debug = false
   ) {
     let plane_index = undefined;
+
     Object.values(this.planes).every((plane, index) => {
-      if (callsign && plane.callsign === callsign) {
+      if (callsign && plane.callsign == callsign) {
         plane_index = index;
         return false;
       }
-      if (hex && plane.hex === hex) {
+      if (hex && plane.hex == hex) {
         plane_index = index;
         return false;
       }
-      if (tail && plane.tail === tail) {
+      if (tail && plane.tail == tail) {
         plane_index = index;
         return false;
       }
       return true;
     });
 
+    if (debug && plane_index) {
+      console.log("This is the matched UID: ", this.planes[plane_index].uid);
+    }
     return plane_index;
   }
 
@@ -312,17 +381,17 @@ export class MessageHandler {
   }
 
   get_callsign_from_acars(msg: acars_msg): string | undefined {
-    if (msg.icao_flight) return msg.icao_flight;
+    if (msg.icao_flight) return msg.icao_flight.toUpperCase();
     return undefined;
   }
 
   get_hex_from_acars(msg: acars_msg): string | undefined {
-    if (msg.icao_hex) return msg.icao_hex;
+    if (msg.icao_hex) return msg.icao_hex.toUpperCase();
     return undefined;
   }
 
   get_tail_from_acars(msg: acars_msg): string | undefined {
-    if (msg.tail) return msg.tail;
+    if (msg.tail) return msg.tail.toUpperCase();
     return undefined;
   }
 
@@ -376,5 +445,38 @@ export class MessageHandler {
 
   get_lon(plane: adsb_plane): number {
     return plane.lon || 0;
+  }
+
+  get_message_by_id(id: undefined | string): undefined | plane[] {
+    if (!id) return undefined;
+
+    let output: undefined | plane[] = undefined;
+
+    Object.values(this.planes).every((plane) => {
+      if (plane.uid == id) {
+        output = [plane];
+        return false;
+      }
+      return true;
+    });
+
+    return output;
+  }
+
+  get_all_messages(): plane[] {
+    let output = [] as plane[];
+
+    Object.values(this.planes).every((plane) => {
+      if (plane.messages) output.push(plane);
+
+      if (output.length < 20) return true;
+      return false;
+    });
+
+    return output;
+  }
+
+  getRandomInt(max: number): number {
+    return Math.floor(Math.random() * Math.floor(max));
   }
 }
