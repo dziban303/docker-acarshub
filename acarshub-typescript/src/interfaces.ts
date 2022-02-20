@@ -14,150 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with acarshub.  If not, see <http://www.gnu.org/licenses/>.
 
-import * as LeafLet from "leaflet";
-
-export interface database_size {
-  size: string;
-  count: number;
-}
-
-export interface system_status {
-  status: {
-    error_state: boolean;
-    decoders: status_decoder;
-    servers: status_server;
-    feeders: status_decoder;
-    global: status_global;
-    stats: status_decoder;
-    external_formats: status_external_formats;
-  };
-}
-
-export interface status_external_formats {
-  [index: string]: [
-    {
-      Status: string;
-      type: string;
-    }
-  ];
-}
-
-export interface status_server {
-  [index: string]: {
-    Status: string;
-    Web: string;
-  };
-}
-
-export interface status_decoder {
-  [index: string]: {
-    Status: string;
-  };
-}
-
-export interface status_global {
-  [index: string]: {
-    Status: string;
-    Count: number;
-  };
-}
-
-export interface terms {
-  terms: string[];
-  ignore: string[];
-}
-
-export interface decoders {
-  acars: boolean;
-  vdlm: boolean;
-  arch: string;
-  adsb: {
-    enabled: boolean;
-    lat: number;
-    lon: number;
-    url: string;
-    bypass: boolean;
-    range_rings: boolean;
-  };
-}
-
-export interface window_size {
-  height: number;
-  width: number;
-}
-
-export interface signal {
-  levels: {
-    [index: number]: {
-      count: number;
-      id: number;
-      level: number;
-    };
-  };
-}
-
-export interface alert_term {
-  data: {
-    [index: number]: {
-      count: number;
-      id: number;
-      term: string;
-    };
-  };
-}
-
-export interface signal_freq_data {
-  freqs: Array<signal_data>;
-}
-
-interface signal_data {
-  freq_type: string;
-  freq: string;
-  count: number;
-}
-
-export interface signal_count_data {
-  count: {
-    non_empty_total: number;
-    non_empty_errors: number;
-    empty_total: number;
-    empty_errors: number;
-  };
-}
-
-export interface current_search {
-  flight: string;
-  depa: string;
-  dsta: string;
-  freq: string;
-  label: string;
-  msgno: string;
-  tail: string;
-  msg_text: string;
-}
-
-export interface labels {
-  [index: string]: {
-    [index: string]: {
-      name: string;
-    };
-  };
-}
-
-export interface html_msg {
-  msghtml: acars_msg;
-  loading?: boolean;
-  done_loading?: boolean;
-}
-
-export interface search_html_msg {
-  msghtml: acars_msg[];
-  query_time: number;
-  num_results: number;
-}
-
 export interface plane {
-  identifiers: string[]; // TODO: remove me
+  uid: string;
   callsign?: string;
   hex?: string;
   tail?: string;
@@ -227,17 +85,6 @@ export interface adsb {
   aircraft: adsb_plane[];
 }
 
-export interface adsb_target {
-  id: string;
-  position: adsb_plane;
-  last_updated: number;
-  num_messages: number;
-  messages?: acars_msg[];
-  icon: null | aircraft_icon;
-  position_marker: null | LeafLet.Marker;
-  datablock_marker: null | LeafLet.Marker;
-}
-
 export interface adsb_plane {
   hex: string;
   type: string;
@@ -291,68 +138,102 @@ export interface adsb_plane {
   r?: string;
 }
 
-export interface matches {
-  value: string;
-  num_messages: number;
+export interface html_msg {
+  msghtml: acars_msg;
+  loading?: boolean;
+  done_loading?: boolean;
 }
 
-export interface adsb_status {
-  adsb_enabled: boolean;
-  adsb_getting_data: boolean;
-}
-
-export interface aircraft_icon {
-  svg: string;
-  width: number;
-  height: number;
-}
-
-export interface plane_data {
-  [index: string]: {
-    count: number;
-    has_alerts: boolean;
-    num_alerts: number;
+export interface decoders {
+  acars: boolean;
+  vdlm: boolean;
+  arch: string;
+  adsb: {
+    enabled: boolean;
+    lat: number;
+    lon: number;
+    url: string;
+    bypass: boolean;
+    range_rings: boolean;
   };
 }
 
-export interface svg_icon {
-  name: string;
-  scale: number;
+export interface system_status {
+  status: {
+    error_state: boolean;
+    decoders: status_decoder;
+    servers: status_server;
+    feeders: status_decoder;
+    global: status_global;
+    stats: status_decoder;
+    external_formats: status_external_formats;
+  };
 }
 
-export interface alert_matched {
-  was_found: boolean;
-  text: string[] | null;
-  icao: string[] | null;
-  flight: string[] | null;
-  tail: string[] | null;
+export interface signal {
+  levels: {
+    [index: number]: {
+      count: number;
+      id: number;
+      level: number;
+    };
+  };
 }
 
-export interface plane_match {
-  messages: acars_msg[];
-  has_alerts: boolean;
-  num_alerts: number;
+export interface alert_term {
+  data: {
+    [index: number]: {
+      count: number;
+      id: number;
+      term: string;
+    };
+  };
 }
 
-export interface plane_num_msgs_and_alert {
-  num_messages: number;
-  has_alerts: boolean;
-  num_alerts: number;
+export interface signal_freq_data {
+  freqs: Array<signal_data>;
 }
 
-export interface acarshub_version {
-  container_version: string;
-  github_version: string;
-  is_outdated: boolean;
+interface signal_data {
+  freq_type: string;
+  freq: string;
+  count: number;
 }
 
-export interface MapOptionsWithNewConfig extends LeafLet.MapOptions {
-  smoothWheelZoom: boolean;
+export interface signal_count_data {
+  count: {
+    non_empty_total: number;
+    non_empty_errors: number;
+    empty_total: number;
+    empty_errors: number;
+  };
 }
 
-declare global {
-  namespace L.control {
-    function custom(options: any): any;
-    function Legend(options: any): any;
-  }
+export interface status_server {
+  [index: string]: {
+    Status: string;
+    Web: string;
+  };
+}
+
+export interface status_decoder {
+  [index: string]: {
+    Status: string;
+  };
+}
+
+export interface status_global {
+  [index: string]: {
+    Status: string;
+    Count: number;
+  };
+}
+
+export interface status_external_formats {
+  [index: string]: [
+    {
+      Status: string;
+      type: string;
+    }
+  ];
 }
