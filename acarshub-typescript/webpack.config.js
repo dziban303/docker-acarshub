@@ -191,7 +191,7 @@ let config = {
         </ul>
       </div>
     </aside>
-    <main class="content">
+    <main class="content" id="acarshub_content">
     </main>
   </div>`,
     }),

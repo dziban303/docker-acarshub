@@ -17,25 +17,25 @@
 declare const window: any;
 
 import {
-  labels,
+  // labels,
   system_status,
   html_msg,
-  terms,
-  database_size,
-  current_search,
-  search_html_msg,
+  // terms,
+  // database_size,
+  // current_search,
+  // search_html_msg,
   decoders,
   signal,
   alert_term,
   signal_freq_data,
   signal_count_data,
   adsb,
-  window_size,
-  alert_matched,
-  plane_data,
-  acars_msg,
-  plane_match,
-  acarshub_version,
+  // window_size,
+  // alert_matched,
+  // plane_data,
+  // acars_msg,
+  // plane_match,
+  // acarshub_version,
 } from "./interfaces";
 
 // CSS loading
@@ -49,6 +49,7 @@ import "./css/site.css";
 
 import { io, Socket } from "socket.io-client";
 import { MessageHandler } from "./processing/message_handler";
+import { LiveMessagesPage } from "./pages/live_messages";
 
 let socket: Socket = <any>null;
 let socket_status: boolean = false;
@@ -66,6 +67,8 @@ let adsb_request_options = {
 } as RequestInit;
 
 let msg_handler = new MessageHandler();
+
+let live_messages_page = new LiveMessagesPage();
 
 $((): void => {
   const menuIconButton = document.querySelector("[data-menu-icon-btn]");
@@ -95,7 +98,8 @@ $((): void => {
       // receive all of the 'on connect' data again, and another adsb interval
       // would be spawned.
 
-      if (!adsb_interval) {
+      // FIXME: Remove this false check. ADSB is shut off to reduce problem space for now
+      if (false && !adsb_interval) {
         update_adsb();
         adsb_interval = setInterval(() => {
           update_adsb();
@@ -116,7 +120,13 @@ $((): void => {
 
   socket.on("acars_msg", function (msg: html_msg) {
     // New acars message.
-    msg_handler.acars_message(msg.msghtml);
+    const delete_id = msg_handler.acars_message(msg.msghtml);
+    // If the message is a new message, then we need to update the page.
+    if (msg.done_loading === true) {
+      live_messages_page.update_page(msg_handler.get_all_messages());
+    } else if (typeof msg.done_loading === "undefined") {
+      live_messages_page.update_page(msg_handler.get_message_by_id(delete_id));
+    }
   });
   // signal level graph
   socket.on("signal", function (msg: signal): void {
@@ -175,6 +185,8 @@ $((): void => {
   socket.on("error", function (e): void {
     console.error(e);
   });
+
+  live_messages_page.update_page();
 });
 
 async function update_adsb(): Promise<void> {
