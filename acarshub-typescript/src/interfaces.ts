@@ -14,6 +14,10 @@
 // You should have received a copy of the GNU General Public License
 // along with acarshub.  If not, see <http://www.gnu.org/licenses/>.
 
+export interface planes_array extends Array<plane> {
+  prepend: (item: plane) => number;
+}
+
 export interface plane {
   uid: string;
   callsign?: string;
@@ -21,7 +25,7 @@ export interface plane {
   tail?: string;
   has_alerts: boolean;
   num_alerts: number;
-  messages?: acars_msg[];
+  messages: acars_msg[];
   position?: adsb_plane;
   last_updated?: number;
 }

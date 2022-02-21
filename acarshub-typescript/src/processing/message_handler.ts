@@ -15,10 +15,17 @@
 // along with acarshub.  If not, see <http://www.gnu.org/licenses/>.
 
 import { MessageDecoder } from "@airframes/acars-decoder/dist/MessageDecoder";
-import { acars_msg, adsb, adsb_plane, plane } from "src/interfaces";
+import {
+  acars_msg,
+  adsb,
+  adsb_plane,
+  plane,
+  planes_array,
+} from "src/interfaces";
 
 export class MessageHandler {
-  planes: Array<plane> = [];
+  // @ts-expect-error
+  planes: planes_array = [] as Array<plane>;
   adsb_last_update_time: number = 0;
   lm_md = new MessageDecoder();
   msg_tags = [
@@ -38,19 +45,18 @@ export class MessageHandler {
   ] as Array<keyof acars_msg>;
 
   constructor() {
-    this.planes = [];
-
     // Overload the unshift operator for the planes array
     // The array should keep only 50 planes with messages if they DO NOT
     // have an ADSB position
-    // @ts-expect-error
+
     this.planes.prepend = (p: plane) => {
       if (this.planes.length >= 50) {
         let indexes_to_delete: Array<number> = []; // All of the indexes with messages and ADSB positions
 
         // Find all of the planes with no ADSB position and messages
         this.planes.forEach((plane, index) => {
-          if (!plane.position && plane.messages) indexes_to_delete.push(index);
+          if (!plane.position && plane.messages && plane.messages.length > 0)
+            indexes_to_delete.push(index);
         });
 
         // Only delete any in excess of 50
@@ -74,15 +80,14 @@ export class MessageHandler {
     const callsign = this.get_callsign_from_acars(msg);
     const hex = this.get_hex_from_acars(msg);
     const tail = this.get_tail_from_acars(msg);
-    const plane = this.match_plane_from_id(callsign, hex, tail, true);
-    console.log("This is the input values: ", hex, tail, callsign, plane);
+    const plane = this.match_plane_from_id(callsign, hex, tail);
+
     if (typeof plane !== "undefined") {
       this.update_plane_message(msg, plane);
 
       this.planes.forEach((item, i) => {
         if (i == plane) {
           this.planes.splice(i, 1);
-          // @ts-expect-error
           this.planes.prepend(item);
         }
       });
@@ -90,7 +95,6 @@ export class MessageHandler {
       this.update_values_from_acars();
     } else {
       msg.uid = this.getRandomInt(1000000).toString(); // Each message gets a unique ID. Used to track tab selection
-      // @ts-expect-error
       this.planes.prepend({
         callsign: callsign,
         hex: hex,
@@ -146,33 +150,27 @@ export class MessageHandler {
   }
 
   update_values_from_acars() {
-    // @ts-expect-error
     if (
       (this.planes[0].callsign == "" ||
         typeof this.planes[0].callsign === "undefined") &&
       this.get_callsign_from_acars(this.planes[0].messages[0]) != ""
     ) {
-      // @ts-expect-error
       this.planes[0].callsign = this.get_callsign_from_acars(
         this.planes[0].messages[0]
       );
     }
-    // @ts-expect-error
     if (
       (this.planes[0].hex == "" || typeof this.planes[0].hex === "undefined") &&
       this.get_hex_from_acars(this.planes[0].messages[0]) != ""
     ) {
-      // @ts-expect-error
       this.planes[0].hex = this.get_hex_from_acars(this.planes[0].messages[0]);
     }
 
-    // @ts-expect-error
     if (
       (this.planes[0].tail == "" ||
         typeof this.planes[0].tail === "undefined") &&
       this.get_tail_from_acars(this.planes[0].messages[0]) != ""
     ) {
-      // @ts-expect-error
       this.planes[0].tail = this.get_tail_from_acars(
         this.planes[0].messages[0]
       );
@@ -305,11 +303,6 @@ export class MessageHandler {
       if (!this.planes[index].messages) this.planes[index].messages = [];
       this.planes[index].messages!.unshift(new_msg);
     }
-
-    console.log(
-      "This is the final message count after processing: ",
-      this.planes[index].messages?.length
-    );
   }
 
   check_for_dup(message: acars_msg, new_msg: acars_msg): boolean {
@@ -339,8 +332,7 @@ export class MessageHandler {
   match_plane_from_id(
     callsign: string | null = null,
     hex: string | null = null,
-    tail: string | null = null,
-    debug = false
+    tail: string | null = null
   ) {
     let plane_index = undefined;
 
@@ -359,10 +351,6 @@ export class MessageHandler {
       }
       return true;
     });
-
-    if (debug && plane_index) {
-      console.log("This is the matched UID: ", this.planes[plane_index].uid);
-    }
     return plane_index;
   }
 
@@ -467,7 +455,7 @@ export class MessageHandler {
     let output = [] as plane[];
 
     Object.values(this.planes).every((plane) => {
-      if (plane.messages) output.push(plane);
+      if (plane.messages && plane.messages.length > 0) output.push(plane);
 
       if (output.length < 20) return true;
       return false;

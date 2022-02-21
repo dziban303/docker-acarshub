@@ -24,18 +24,13 @@ export class LiveMessagesPage extends Page {
     super("Live Messages");
     $(this.content_area).html("Welcome to ACARS Hub. Waiting for data...");
   }
-  update_page(
-    planes: plane[] | undefined = undefined,
-    move_or_delete_id: boolean = false
-  ) {
+  update_page(planes: plane[] | undefined = undefined) {
     if (!planes) {
       $(this.content_area).html("No data received yet.");
       return;
     }
 
     if (this.current_message_string) {
-      console.log("Displaying this UID: ", planes[0].uid);
-
       $(`#${planes[0].uid}_container`).remove();
 
       // Display the new message at the front of the DOM tree
