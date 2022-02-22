@@ -84,6 +84,16 @@ export class MessageHandler {
 
     if (typeof plane !== "undefined") {
       this.update_plane_message(msg, plane);
+      // Ensure we always have a good selected tab UID
+      // If there was never a message (aka this is the first time ACARS has been received)
+      // Or if the user has never interacted with the tab selection for this plane
+      // Then we'll set the selected tab to the first message
+      if (
+        this.planes[plane].messages.length == 1 ||
+        !this.planes[plane].manually_selected_tab
+      ) {
+        this.planes[plane].selected_tab = this.planes[plane].messages[0].uid;
+      }
 
       this.planes.forEach((item, i) => {
         if (i == plane) {
@@ -94,17 +104,19 @@ export class MessageHandler {
 
       this.update_values_from_acars();
     } else {
-      msg.uid = this.getRandomInt(1000000).toString(); // Each message gets a unique ID. Used to track tab selection
+      const processed_message = this.update_plane_message(msg);
       this.planes.prepend({
         callsign: callsign,
         hex: hex,
         tail: tail,
         position: undefined,
-        messages: [msg],
+        messages: processed_message ? processed_message : [],
         has_alerts: false,
         num_alerts: 0,
         last_updated: 0,
         uid: this.getRandomInt(1000000).toString(),
+        selected_tab: msg.uid,
+        manually_selected_tab: false,
       });
     }
 
@@ -132,6 +144,8 @@ export class MessageHandler {
           num_alerts: 0,
           last_updated: this.adsb_last_update_time,
           uid: this.getRandomInt(1000000).toString(),
+          selected_tab: "0",
+          manually_selected_tab: false,
         });
       }
     });
@@ -177,16 +191,26 @@ export class MessageHandler {
     }
   }
 
-  update_plane_message(new_msg: acars_msg, index: number) {
-    if (typeof this.planes[index].messages === "undefined") {
-      this.planes[index].messages = [new_msg];
-      return;
-    }
-    let rejected = false;
-
+  update_plane_message(
+    new_msg: acars_msg,
+    index: number | undefined = undefined
+  ): undefined | Array<acars_msg> {
     // TODO: add in alert matching
     let matched = { was_found: false };
     new_msg.uid = this.getRandomInt(1000000).toString(); // Each message gets a unique ID. Used to track tab selection
+    if ("text" in new_msg) {
+      // see if we can run it through the text decoder
+      let decoded_msg = this.lm_md.decode(new_msg);
+      if (decoded_msg.decoded == true) {
+        new_msg.decodedText = decoded_msg;
+      }
+    }
+
+    if (typeof index === "undefined") {
+      return [new_msg];
+    }
+    let rejected = false;
+
     // TODO: remove this ! check for TS
     for (let message of this.planes[index].messages!) {
       // First check is to see if the message is the same by checking all fields and seeing if they match
@@ -281,7 +305,7 @@ export class MessageHandler {
           // Re-run the text decoder against the text field we've updated
           let decoded_msg = this.lm_md.decode(message);
           if (decoded_msg.decoded == true) {
-            message["decoded_msg"] = decoded_msg;
+            message["decodedText"] = decoded_msg;
           }
         }
         break;

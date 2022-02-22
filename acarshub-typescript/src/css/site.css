@@ -9,14 +9,30 @@ body {
 }
 
 :root {
+  /* colors for dark */
+
+  --dark-bg-grey-bg: hsl(0, 0%, 21%);
+  --dark-bg-text-color: hsl(0, 0%, 100%);
+
+  /* Colors for white */
   --accent-color: rgb(204, 0, 0);
   --lightest-gray: rgb(244, 244, 244);
   --light-gray: rgb(144, 144, 144);
-  --medium-gray: rgb(96, 96, 96);
-  --dark-gray: rgb(13, 13, 13);
+  --medium-gray: #4b4a4a;
+  --dark-gray: hsl(0, 0%, 5%);
   --header-height: 40px;
   --animation-duration: 200ms;
   --animation-timing-curve: ease-in-out;
+  --site-fonts: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --mono-fonts: Menlo, Monaco, Consolas, "Courier New", monospace;
+}
+body {
+  font-family: var(--site-fonts);
+  background-color: var(--dark-bg-grey-bg);
+  color: var(--dark-bg-text-color);
+  -ms-overflow-style: none; /* for Internet Explorer, Edge */
+  scrollbar-width: none; /* for Firefox */
+  overflow-y: scroll;
 }
 
 .header {
@@ -24,7 +40,7 @@ body {
   align-items: center;
   position: sticky;
   top: 0;
-  background-color: white;
+  background-color: var(--dark-bg-grey-bg);
   box-shadow: 0 1px 10px 0 rgba(0, 0, 0, 0.4);
   padding: 0 0.5rem;
   height: var(--header-height);
@@ -117,6 +133,7 @@ body {
 
 .content {
   margin: 1rem;
+  width: 100%;
 }
 
 .sidebar-list {
@@ -147,10 +164,14 @@ body {
   display: flex;
   width: 100%;
   padding: 0.5rem 0;
-  color: var(--light-gray);
+  color: var(--dark-bg-text-color);
   text-decoration: none;
   align-items: center;
   padding-left: 25px;
+}
+
+.active .sidebar-link {
+  color: var(--dark-gray);
 }
 
 .sidebar-list-item {
@@ -162,10 +183,16 @@ body {
 .sidebar-list-item.active {
   fill: var(--accent-color);
   background-color: var(--lightest-gray);
+  color: var(--dark-gray);
 }
 
 .sidebar-list-item:hover {
   background-color: var(--lightest-gray);
+  color: var(--dark-gray);
+}
+
+.sidebar-link:hover {
+  color: var(--dark-gray);
 }
 
 .sidebar-list-item.active::before {
@@ -175,6 +202,7 @@ body {
   left: 0;
   width: 3px;
   position: absolute;
+  color: var(--dark-gray);
 }
 
 .sidebar.open {
@@ -182,7 +210,7 @@ body {
 }
 
 .your-channel {
-  color: var(--dark-gray);
+  color: var(--dark-bg-text-color);
   font-size: 0.75rem;
   font-weight: bold;
   margin-bottom: 0.15rem;
@@ -190,7 +218,7 @@ body {
 }
 
 .channel-name {
-  color: var(--medium-gray);
+  color: var(--dark-bg-text-color);
   font-size: 0.75rem;
 }
 
@@ -200,10 +228,109 @@ body {
 }
 
 .sidebar.open .top-sidebar {
-  height: 125px;
+  height: 90px;
 }
 
 .sidebar .top-sidebar .hidden-sidebar {
   text-align: center;
   width: 100%;
+}
+
+/* ACARS Message CSS values */
+
+.acars_message_container {
+  display: flex;
+  flex-direction: column;
+  /* align-items: center; */
+  justify-content: center;
+  width: 100%;
+  background-color: var(--medium-gray);
+  color: var(--dark-bg-text-color);
+  padding: 0.1rem;
+  max-width: 1000px;
+  margin-bottom: 1rem;
+  border: 1px solid var(--light-gray);
+  border-radius: 10px;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
+
+.acars_message_row,
+.acars_row_footer {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  padding: 0.5rem;
+  border-bottom: 1px solid var(--light-gray);
+
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
+
+.acars_row_footer {
+  border-bottom: none;
+}
+
+.acars_message {
+  font-size: 0.8rem;
+  margin-bottom: 0.1rem;
+  margin-top: 0.1rem;
+
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
+
+.message_from,
+.footer_left_side {
+  justify-content: left;
+  width: 50%;
+}
+
+.message_time,
+.footer_right_side {
+  justify-content: right;
+  text-align: right;
+  width: 50%;
+}
+
+.message_body {
+  width: 100%;
+}
+
+.text_body {
+  font-size: 0.8rem;
+  font-weight: bold;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  margin-left: 1rem;
+  max-width: 100%;
+}
+
+.text_fields {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  width: 100%;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  margin-left: -1rem;
+}
+
+.code {
+  background-color: var(--lightest-gray);
+  font-family: var(--mono-fonts);
+  font-size: 0.8rem;
+  color: var(--dark-gray);
+  border: 1px solid #000;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+  margin-top: 1rem;
+  padding: 0.5rem;
+
+  white-space: pre-wrap; /* css-3 */
+  white-space: -moz-pre-wrap; /* Mozilla, since 1999 */
+  white-space: -pre-wrap; /* Opera 4-6 */
+  white-space: -o-pre-wrap; /* Opera 7 */
+  word-wrap: break-all; /* Internet Explorer 5.5+ */
+  overflow-wrap: break-all;
 }

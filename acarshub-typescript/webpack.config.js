@@ -137,8 +137,7 @@ let config = {
     <div class="container">
     <aside class="sidebar" data-sidebar>
       <div class="top-sidebar">
-        <a href="#" class="channel-logo"><img src="/static/images/acarshublogo.png" alt="ACARS Hub"></a>
-        <div class="hidden-sidebar your-channel">ACARS Hub</div>
+        <img class="channel-logo" src="/static/images/acarshublogo.png" alt="ACARS Hub">
       </div>
       <div class="middle-sidebar">
         <ul class="sidebar-list">

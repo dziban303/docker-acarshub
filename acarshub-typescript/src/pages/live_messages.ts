@@ -15,6 +15,10 @@
 // along with acarshub.  If not, see <http://www.gnu.org/licenses/>.
 
 import { acars_msg, plane } from "src/interfaces";
+import {
+  generate_messages_html_from_planes,
+  generate_message_group_html_from_plane,
+} from "../processing/message_html_generator";
 import { Page } from "./pages";
 
 export class LiveMessagesPage extends Page {
@@ -35,7 +39,7 @@ export class LiveMessagesPage extends Page {
 
       // Display the new message at the front of the DOM tree
       $(this.content_area).prepend(
-        `<div id="${planes[0].uid}_container" class="acars_message_container">${planes[0].uid} ${planes[0].hex} ${planes[0].callsign} ${planes[0].tail} ${planes[0].messages?.length}</div>`
+        generate_message_group_html_from_plane(planes[0])
       );
       // After updating the tree we may exceed the length. If so, remove the last element
 
@@ -48,10 +52,7 @@ export class LiveMessagesPage extends Page {
       this.current_message_string = $(this.content_area).html();
     } else {
       // This is a new load and we need to populate the DOM tree
-      this.current_message_string = "";
-      planes.forEach((p: plane) => {
-        this.current_message_string += `<div id="${p.uid}_container" class="acars_message_container">${p.uid} ${p.hex} ${p.callsign} ${p.tail} ${p.messages?.length}</div>`;
-      });
+      this.current_message_string = generate_messages_html_from_planes(planes);
       //   this.current_message_string = display_messages(
       //     this.lm_msgs_received.get_all_messages(),
       //     this.selected_tabs,
