@@ -25,6 +25,8 @@ export interface plane {
   tail?: string;
   has_alerts: boolean;
   num_alerts: number;
+  selected_tab: string;
+  manually_selected_tab: boolean;
   messages: acars_msg[];
   position?: adsb_plane;
   last_updated?: number;
