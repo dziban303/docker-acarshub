@@ -279,13 +279,15 @@ function generate_footer(planes: plane, acars_message: acars_msg): string {
 
   output += `<div class="footer_right_side">`;
   if (has_field(acars_message, "freq")) {
-    output += `<div class="footer_item"><strong>F:</strong> ${acars_message.freq
+    output += `<div class="footer_item"><strong>F:</strong> ${Number(
+      acars_message.freq
+    )
       ?.toPrecision(6)
       .toLocaleString()}</div>`;
   }
 
   if (has_field(acars_message, "level")) {
-    let level = acars_message.level ? acars_message.level : 0;
+    let level = Number(acars_message.level ? acars_message.level : 0);
     let circle = "";
     if (level >= -10.0) {
       circle = "circle_green";
