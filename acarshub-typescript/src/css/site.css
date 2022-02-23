@@ -9,6 +9,11 @@ body {
 }
 
 :root {
+  --blue-highlight: hsl(193, 81%, 41%);
+  --full-yellow: hsl(60, 100%, 50%);
+  --full-orange: hsl(39, 100%, 50%);
+  --full-red: hsl(0, 100%, 50%);
+  --full-green: hsl(120, 100%, 25%);
   /* colors for dark */
 
   --dark-bg-grey-bg: hsl(0, 0%, 21%);
@@ -32,7 +37,6 @@ body {
   color: var(--dark-bg-text-color);
   -ms-overflow-style: none; /* for Internet Explorer, Edge */
   scrollbar-width: none; /* for Firefox */
-  overflow-y: scroll;
 }
 
 .header {
@@ -253,6 +257,14 @@ body {
   border-radius: 10px;
   overflow-wrap: break-word;
   word-wrap: break-word;
+  line-height: 1.1rem;
+  font-size: 0.9rem;
+}
+
+.acars_message_container a {
+  color: var(--blue-highlight);
+  text-decoration: none;
+  font-weight: bold;
 }
 
 .acars_message_row,
@@ -262,17 +274,16 @@ body {
   width: 100%;
   padding: 0.5rem;
   border-bottom: 1px solid var(--light-gray);
-
   overflow-wrap: break-word;
   word-wrap: break-word;
 }
 
 .acars_row_footer {
   border-bottom: none;
+  position: relative;
 }
 
 .acars_message {
-  font-size: 0.8rem;
   margin-bottom: 0.1rem;
   margin-top: 0.1rem;
 
@@ -291,6 +302,7 @@ body {
   justify-content: right;
   text-align: right;
   width: 50%;
+  float: right;
 }
 
 .message_body {
@@ -298,7 +310,6 @@ body {
 }
 
 .text_body {
-  font-size: 0.8rem;
   font-weight: bold;
   overflow-wrap: break-word;
   word-wrap: break-word;
@@ -319,7 +330,6 @@ body {
 .code {
   background-color: var(--lightest-gray);
   font-family: var(--mono-fonts);
-  font-size: 0.8rem;
   color: var(--dark-gray);
   border: 1px solid #000;
   border-radius: 10px;
@@ -333,4 +343,66 @@ body {
   white-space: -o-pre-wrap; /* Opera 7 */
   word-wrap: break-all; /* Internet Explorer 5.5+ */
   overflow-wrap: break-all;
+}
+
+.footer_item {
+  display: inline-block;
+  border-right: 1px solid var(--light-gray);
+  margin-left: 0.3rem;
+  padding-right: 0.3rem;
+}
+
+.footer_left_side > .footer_item:last-child {
+  border-right: none;
+  padding-right: 0;
+}
+
+.footer_right_side > .footer_item:last-child {
+  border-right: none;
+  padding-right: 0;
+}
+
+.footer_item:first-child {
+  margin-left: 0;
+}
+
+.circle_red {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  border: 1px solid;
+  background-color: var(--full-red);
+  display: inline-block;
+}
+
+.circle_orange {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  border: 1px solid;
+  background-color: var(--full-orange);
+  display: inline-block;
+}
+
+.circle_yellow {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  border: 1px solid;
+  background-color: var(--full-yellow);
+  display: inline-block;
+}
+
+.circle_green {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  border: 1px solid;
+  background-color: var(--full-green);
+  display: inline-block;
+}
+
+.error {
+  color: var(--full-red);
+  font-weight: bold;
 }
