@@ -208,19 +208,20 @@ function display_message_text(acars_message: acars_msg): string {
       // TODO: fix TS !
       // TODO: highlight alert terms
       const text = acars_message.text!.replace("\\r\\n", "<br>");
-      // output += `<p><strong>Message Text:</strong></p>`;
       output += `<div class="text_body"><p><strong>Message Text:</strong></p><div class="code">${text}</div></div>`;
     }
 
     if (has_field(acars_message, "decodedText")) {
-      // output += `<p><strong>Decoded Text:</strong></p>`;
-      output += `<div class="text_body"><p><strong>Decoded Text:</strong></p><div class="code">${loop_array(
+      output += `<div class="text_body"><p><strong>${
+        acars_message.decodedText.decoder.decodeLevel == "full"
+          ? ""
+          : "Partially "
+      }Decoded Text:</strong></p><div class="code">${loop_array(
         acars_message.decodedText.formatted
       )}</div></div>`;
     }
 
     if (has_field(acars_message, "data")) {
-      // output += `<p><strong>Data:</strong></p>`;
       // TODO: fix TS !
       output += `<div class="text_body"><p><strong>Data:</strong></p><div class="code">${acars_message.data!.replace(
         "\\r\\n",
@@ -229,7 +230,6 @@ function display_message_text(acars_message: acars_msg): string {
     }
 
     if (has_field(acars_message, "libacars")) {
-      // output += `<p><strong>LibACARS Decoded Text:</strong></p>`;
       output += `<div class="text_body"><p><strong>LibACARS Decoded Text:</strong></p><div class="code">${acars_message
         .libacars!.replace("<pre>")
         .replace("</pre>")}</div></div>`;
@@ -241,16 +241,103 @@ function display_message_text(acars_message: acars_msg): string {
 
 function generate_footer(planes: plane, acars_message: acars_msg): string {
   let output = `<div class="acars_row_footer">`;
-  output += `<div class="acars_row_footer_left">`;
-  output += `<strong>Plane:</strong> ${acars_message.icao}<br>`;
-  output += `</div>`;
-  output += `</div>`;
+  output += `<div class="footer_left_side">`;
+
+  if (has_field(acars_message, "tail")) {
+    // TODO: show tail as matched if matched
+    output += `<div class="footer_item"><strong>Tail:</strong> <a href="https://flightaware.com/live/flight/${acars_message.tail}" target="_blank">${acars_message.tail}</a></div>`;
+  } else if (planes.tail) {
+    output += `<div class="footer_item"><strong>Tail:</strong> <a href="https://flightaware.com/live/flight/${planes.tail}" target="_blank">${planes.tail}</a></div>`;
+  }
+
+  if (has_field(acars_message, "flight")) {
+    output += `<div class="footer_item">${acars_message.flight}</div>`;
+  } else if (planes.callsign) {
+    output += `<div class="footer_item"><strong>Flight:</strong> ${planes.callsign}</div>`;
+  }
+
+  if (has_field(acars_message, "icao")) {
+    output += `<div class="footer_item"><strong>ICAO:</strong>`;
+    if (has_field(acars_message, "icao_url")) {
+      output += ` <a href="${acars_message.icao_url}" target="_blank">${acars_message.icao}`;
+    } else {
+      output += ` ${acars_message.icao}`;
+    }
+
+    if (has_field(acars_message, "icao_hex")) {
+      output += `/${acars_message.icao_hex}${
+        has_field(acars_message, "icao_url") ? "</a>" : ""
+      }`;
+    } else {
+      output += `/?`;
+    }
+
+    output += `</div>`;
+  }
+
+  output += `</div>`; // div for left side
+
+  output += `<div class="footer_right_side">`;
+  if (has_field(acars_message, "freq")) {
+    output += `<div class="footer_item"><strong>F:</strong> ${acars_message.freq
+      ?.toPrecision(6)
+      .toLocaleString()}</div>`;
+  }
+
+  if (has_field(acars_message, "level")) {
+    let level = acars_message.level ? acars_message.level : 0;
+    let circle = "";
+    if (level >= -10.0) {
+      circle = "circle_green";
+    } else if (level >= -20.0) {
+      circle = "circle_yellow";
+    } else if (level >= -30.0) {
+      circle = "circle_orange";
+    } else {
+      circle = "circle_red";
+    }
+
+    output += `<div class="footer_item"><strong>L:</strong> ${level
+      .toPrecision(3)
+      .toLocaleString()}&nbsp<div class="${circle}"></div></div>`;
+  }
+
+  if (has_field(acars_message, "ack")) {
+    output += `<div class="footer_item"><strong>A:</strong> ${acars_message.ack}</div>`;
+  }
+
+  if (has_field(acars_message, "mode")) {
+    output += `<div class="footer_item"><strong>M: ${acars_message.mode}</div>`;
+  }
+
+  if (has_field(acars_message, "block_id")) {
+    output += `<div class="footer_item"><strong>B:</strong> ${acars_message.block_id}</div>`;
+  }
+
+  if (has_field(acars_message, "msgno")) {
+    output += `<div class="footer_item"><strong>M#:</strong> ${acars_message.msgno}</div>`;
+  }
+
+  if (has_field(acars_message, "is_response")) {
+    output += `<div class="footer_item"><strong>R:</strong> ${acars_message.is_response}</div>`;
+  }
+
+  if (has_field(acars_message, "is_onground")) {
+    output += `<div class="footer_item"><strong>G:</strong> ${acars_message.is_onground}</div>`;
+  }
+
+  if (has_field(acars_message, "error") && Number(acars_message.error) !== 0) {
+    output += `<div class="footer_item"><strong>E:</strong> <span class="error">${acars_message.error}</span></div>`;
+  }
+
+  output += `</div>`; // div for right side
+  output += `</div>`; // div for row
   return output;
 }
 
 function has_field(acars_message: acars_msg, field: string): boolean {
-  // @ts-expect-error
   return (
+    // @ts-expect-error
     typeof acars_message[field] !== "undefined" && acars_message[field] !== ""
   );
 }
