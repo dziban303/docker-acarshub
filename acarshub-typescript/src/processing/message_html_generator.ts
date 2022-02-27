@@ -206,33 +206,50 @@ function display_message_text(acars_message: acars_msg): string {
   ) {
     if (has_field(acars_message, "text")) {
       // TODO: fix TS !
-      // TODO: highlight alert terms
-      const text = acars_message.text!.replace("\\r\\n", "<br>");
+
+      let text = acars_message.text!.replace("\\r\\n", "<br>");
+      if (acars_message.matched && acars_message.matched_text) {
+        acars_message.matched_text.forEach((term) => {
+          text = text.replace(term, `<span class="alert_term">${term}</span>`);
+        });
+      }
       output += `<div class="text_body"><p><strong>Message Text:</strong></p><div class="code">${text}</div></div>`;
     }
 
     if (has_field(acars_message, "decodedText")) {
+      let text = loop_array(acars_message.decodedText.formatted);
+      if (acars_message.matched && acars_message.matched_text) {
+        acars_message.matched_text.forEach((term) => {
+          text = text.replace(term, `<span class="alert_term">${term}</span>`);
+        });
+      }
+
       output += `<div class="text_body"><p><strong>${
         acars_message.decodedText.decoder.decodeLevel == "full"
           ? ""
           : "Partially "
-      }Decoded Text:</strong></p><div class="code">${loop_array(
-        acars_message.decodedText.formatted
-      )}</div></div>`;
+      }Decoded Text:</strong></p><div class="code">${text}</div></div>`;
     }
 
     if (has_field(acars_message, "data")) {
       // TODO: fix TS !
-      output += `<div class="text_body"><p><strong>Data:</strong></p><div class="code">${acars_message.data!.replace(
-        "\\r\\n",
-        "<br>"
-      )}</div></div>`;
+      let text = acars_message.data!.replace("\\r\\n", "<br>");
+      if (acars_message.matched && acars_message.matched_text) {
+        acars_message.matched_text.forEach((term) => {
+          text = text.replace(term, `<span class="alert_term">${term}</span>`);
+        });
+      }
+      output += `<div class="text_body"><p><strong>Data:</strong></p><div class="code">${text}</div></div>`;
     }
 
     if (has_field(acars_message, "libacars")) {
-      output += `<div class="text_body"><p><strong>LibACARS Decoded Text:</strong></p><div class="code">${acars_message
-        .libacars!.replace("<pre>")
-        .replace("</pre>")}</div></div>`;
+      let text = acars_message.libacars!.replace("<pre>").replace("</pre>");
+      if (acars_message.matched && acars_message.matched_text) {
+        acars_message.matched_text.forEach((term) => {
+          text = text.replace(term, `<span class="alert_term">${term}</span>`);
+        });
+      }
+      output += `<div class="text_body"><p><strong>LibACARS Decoded Text:</strong></p><div class="code">${text}</div></div>`;
     }
   }
 

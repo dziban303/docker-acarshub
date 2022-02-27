@@ -21,9 +21,12 @@ import {
   adsb_plane,
   plane,
   planes_array,
+  alert_terms,
 } from "src/interfaces";
+import { AlertHandler } from "./alert_handler";
 
 export class MessageHandler {
+  alert_handler: AlertHandler;
   // @ts-expect-error
   planes: planes_array = [] as Array<plane>;
   adsb_last_update_time: number = 0;
@@ -48,7 +51,7 @@ export class MessageHandler {
     // Overload the unshift operator for the planes array
     // The array should keep only 50 planes with messages if they DO NOT
     // have an ADSB position
-
+    this.alert_handler = new AlertHandler();
     this.planes.prepend = (p: plane) => {
       if (this.planes.length >= 50) {
         let indexes_to_delete: Array<number> = []; // All of the indexes with messages and ADSB positions
@@ -76,6 +79,12 @@ export class MessageHandler {
     };
   }
 
+  set_alerts(alerts: alert_terms) {
+    if (alerts) {
+      this.alert_handler.set_terms(alerts);
+    }
+  }
+
   acars_message(msg: acars_msg) {
     const callsign = this.get_callsign_from_acars(msg);
     const hex = this.get_hex_from_acars(msg);
@@ -84,6 +93,15 @@ export class MessageHandler {
 
     if (typeof plane !== "undefined") {
       this.update_plane_message(msg, plane);
+      const matched_terms = this.alert_handler.find_alerts(
+        this.planes[plane].messages[0]
+      );
+      if (matched_terms && matched_terms.length > 0) {
+        this.planes[plane].messages[0].matched = true;
+        this.planes[plane].messages[0].matched_text = matched_terms;
+        this.planes[plane].has_alerts = true;
+        this.planes[plane].num_alerts += 1;
+      }
       // Ensure we always have a good selected tab UID
       // If there was never a message (aka this is the first time ACARS has been received)
       // Or if the user has never interacted with the tab selection for this plane
@@ -104,15 +122,20 @@ export class MessageHandler {
 
       this.update_values_from_acars();
     } else {
-      const processed_message = this.update_plane_message(msg);
+      let processed_message = this.update_plane_message(msg);
+      const matched_terms = this.alert_handler.find_alerts(msg);
+      if (matched_terms && matched_terms.length > 0 && processed_message) {
+        processed_message[0].matched = true;
+        processed_message[0].matched_text = matched_terms;
+      }
       this.planes.prepend({
         callsign: callsign,
         hex: hex,
         tail: tail,
         position: undefined,
         messages: processed_message ? processed_message : [],
-        has_alerts: false,
-        num_alerts: 0,
+        has_alerts: matched_terms && matched_terms.length > 0,
+        num_alerts: matched_terms && matched_terms.length > 0 ? 1 : 0,
         last_updated: 0,
         uid: this.getRandomInt(1000000).toString(),
         selected_tab: msg.uid,
@@ -196,7 +219,7 @@ export class MessageHandler {
     index: number | undefined = undefined
   ): undefined | Array<acars_msg> {
     // TODO: add in alert matching
-    let matched = { was_found: false };
+
     new_msg.uid = this.getRandomInt(1000000).toString(); // Each message gets a unique ID. Used to track tab selection
     if ("text" in new_msg) {
       // see if we can run it through the text decoder
