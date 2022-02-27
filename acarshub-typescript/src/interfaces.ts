@@ -62,11 +62,8 @@ export interface acars_msg {
   error?: number | string;
   libacars?: any;
   level?: number;
-  matched?: boolean; // This line and below are custom parameters injected by javascript or from the backend
-  matched_text?: string[];
-  matched_icao?: string[];
-  matched_flight?: string[];
-  matched_tail?: string[];
+  matched: boolean; // This line and below are custom parameters injected by javascript or from the backend
+  matched_text: string[];
   uid: string;
   decodedText?: any; // no type for typescript acars decoder; so set to any
   data?: string;
@@ -242,4 +239,11 @@ export interface status_external_formats {
       type: string;
     }
   ];
+}
+
+// Interface for setting alert terms
+
+export interface alert_terms {
+  text_terms: string[];
+  ignore: string[];
 }

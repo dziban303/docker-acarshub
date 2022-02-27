@@ -17,25 +17,15 @@
 declare const window: any;
 
 import {
-  // labels,
   system_status,
   html_msg,
-  // terms,
-  // database_size,
-  // current_search,
-  // search_html_msg,
   decoders,
   signal,
   alert_term,
   signal_freq_data,
   signal_count_data,
   adsb,
-  // window_size,
-  // alert_matched,
-  // plane_data,
-  // acars_msg,
-  // plane_match,
-  // acarshub_version,
+  alert_terms,
 } from "./interfaces";
 
 // CSS loading
@@ -67,7 +57,6 @@ let adsb_request_options = {
 } as RequestInit;
 
 let msg_handler = new MessageHandler();
-
 let live_messages_page = new LiveMessagesPage();
 
 $((): void => {
@@ -131,6 +120,10 @@ $((): void => {
   // signal level graph
   socket.on("signal", function (msg: signal): void {
     // stats_page.signals(msg);
+  });
+
+  socket.on("terms", function (msg: alert_terms): void {
+    msg_handler.set_alerts(msg);
   });
 
   // alert term graph

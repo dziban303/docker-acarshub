@@ -402,7 +402,8 @@ body {
   display: inline-block;
 }
 
-.error {
+.error,
+.alert_term {
   color: var(--full-red);
   font-weight: bold;
 }

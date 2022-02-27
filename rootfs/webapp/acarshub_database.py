@@ -1093,6 +1093,7 @@ def set_alert_ignore(terms=None):
 
 
 def set_alert_terms(terms=None):
+    # TODO: remove any rows that dont' match the current set of terms
     if terms is None:
         return
     global alert_terms
