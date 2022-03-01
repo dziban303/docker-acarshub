@@ -379,11 +379,19 @@ export class MessageHandler {
   match_plane_from_id(
     callsign: string | null = null,
     hex: string | null = null,
-    tail: string | null = null
-  ) {
+    tail: string | null = null,
+    uid: string | null = null
+  ): undefined | number {
+    // make sure we have some kind of value to match with
+    if (!callsign && !hex && !tail && !uid) return undefined;
+
     let plane_index = undefined;
 
     Object.values(this.planes).every((plane, index) => {
+      if (uid && plane.uid == uid) {
+        plane_index = index;
+        return false;
+      }
       if (callsign && plane.callsign == callsign) {
         plane_index = index;
         return false;
@@ -513,5 +521,45 @@ export class MessageHandler {
 
   getRandomInt(max: number): number {
     return Math.floor(Math.random() * Math.floor(max));
+  }
+
+  update_selected_tab(uid: string, direction: "left" | "right" = "left"): void {
+    if (!uid) return;
+    let index = this.match_plane_from_id(undefined, undefined, undefined, uid);
+
+    if (index === undefined) return;
+
+    this.planes[index].manually_selected_tab = true;
+    // get current position of the current tab
+    let current_tab_index = 0;
+
+    this.planes[index].messages.every((message, msg_index) => {
+      if (message.uid == this.planes[index!].selected_tab) {
+        current_tab_index = msg_index;
+        return false;
+      }
+      return true;
+    });
+
+    if (direction == "left") {
+      // if we are at the first tab, go to the last tab
+      if (current_tab_index == 0) {
+        this.planes[index].selected_tab =
+          this.planes[index].messages[
+            this.planes[index].messages.length - 1
+          ].uid;
+      } else {
+        this.planes[index].selected_tab =
+          this.planes[index].messages[current_tab_index - 1].uid;
+      }
+    } else {
+      // if we are at the last tab, go to the first tab
+      if (current_tab_index == this.planes[index].messages.length - 1) {
+        this.planes[index].selected_tab = this.planes[index].messages[0].uid;
+      } else {
+        this.planes[index].selected_tab =
+          this.planes[index].messages[current_tab_index + 1].uid;
+      }
+    }
   }
 }
