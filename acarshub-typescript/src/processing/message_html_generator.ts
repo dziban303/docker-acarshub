@@ -35,24 +35,34 @@ export function generate_messages_html_from_planes(
 }
 
 export function generate_message_group_html_from_plane(
-  planes: plane | undefined = undefined
+  planes: plane | undefined = undefined,
+  create_container = true
 ): string {
   if (!planes || planes.messages.length === 0) {
     console.error("No messages. Nothing to display.");
     return "";
   }
+  let output = "";
+  if (create_container)
+    output = `<div id="${planes.uid}_container" class="acars_message_container">`;
 
-  let output = `<div id="${planes.uid}_container" class="acars_message_container">`;
-
-  planes.messages.every((message) => {
+  planes.messages.every((message, index) => {
     if (message.uid == planes.selected_tab) {
+      if (planes.messages.length > 1) {
+        output += `<div class="acars_message_row"><div class="message_buttons">`;
+        output += `<button id="${planes.uid}_button_left" class="nav-button" onclick="nav_left(${planes.uid})" role="button"><<</button>`;
+        output += `<button id="${planes.uid}_button_right" class="nav-button" onclick="nav_right(${planes.uid})" role="button">>></button>`;
+        output += `&nbspMessage ${index + 1} of ${planes.messages.length}`;
+        output += `</div></div>`;
+      }
+
       output += generate_message_html(planes, message);
       return false;
     }
     return true;
   });
 
-  output += "</div>";
+  if (create_container) output += "</div>";
 
   return output;
 }

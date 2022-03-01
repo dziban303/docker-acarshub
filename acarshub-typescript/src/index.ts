@@ -39,6 +39,7 @@ import "./css/site.css";
 
 import { io, Socket } from "socket.io-client";
 import { MessageHandler } from "./processing/message_handler";
+import { faWindowRestore } from "@fortawesome/free-regular-svg-icons";
 // import { LiveMessagesPage } from "./pages/live_messages";
 
 let socket: Socket = <any>null;
@@ -195,3 +196,19 @@ async function update_adsb(): Promise<void> {
       console.error(err);
     });
 }
+
+// register window handlers for callback to the correct object
+
+window.nav_left = (uid: string): void => {
+  if (!uid) return;
+
+  msg_handler.update_selected_tab(uid);
+  live_messages_page.update_page_in_place(msg_handler.get_message_by_id(uid));
+};
+
+window.nav_right = (uid: string): void => {
+  if (!uid) return;
+
+  msg_handler.update_selected_tab(uid, "right");
+  live_messages_page.update_page_in_place(msg_handler.get_message_by_id(uid));
+};

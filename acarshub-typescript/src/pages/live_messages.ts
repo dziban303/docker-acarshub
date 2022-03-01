@@ -28,6 +28,17 @@ export class LiveMessagesPage extends Page {
     super("Live Messages");
     $(this.content_area).html("Welcome to ACARS Hub. Waiting for data...");
   }
+
+  update_page_in_place(planes: plane[] | undefined = undefined) {
+    if (!planes) {
+      return;
+    }
+
+    const new_html = generate_message_group_html_from_plane(planes[0], false);
+    $(`#${planes[0].uid}_container`).html(new_html);
+    this.current_message_string = $(this.content_area).html();
+  }
+
   update_page(planes: plane[] | undefined = undefined) {
     if (!planes) {
       $(this.content_area).html("No data received yet.");
