@@ -39,7 +39,7 @@ import "./css/site.css";
 
 import { io, Socket } from "socket.io-client";
 import { MessageHandler } from "./processing/message_handler";
-import { LiveMessagesPage } from "./pages/live_messages";
+// import { LiveMessagesPage } from "./pages/live_messages";
 
 let socket: Socket = <any>null;
 let socket_status: boolean = false;
@@ -57,7 +57,8 @@ let adsb_request_options = {
 } as RequestInit;
 
 let msg_handler = new MessageHandler();
-let live_messages_page = new LiveMessagesPage();
+const { LiveMessagesPage } = await import("./pages/live_messages");
+const live_messages_page = new LiveMessagesPage();
 
 $((): void => {
   const menuIconButton = document.querySelector("[data-menu-icon-btn]");

@@ -209,5 +209,7 @@ module.exports = (env, argv) => {
     config.devtool = "source-map";
     config.output.filename = "[name].[chunkhash].js";
   }
+  config.experiments = config.experiments || {};
+  config.experiments.topLevelAwait = true;
   return config;
 };
