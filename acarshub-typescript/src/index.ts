@@ -26,6 +26,7 @@ import {
   signal_count_data,
   adsb,
   alert_terms,
+  LiveMessagesPage,
 } from "./interfaces";
 
 // CSS loading
@@ -58,10 +59,13 @@ let adsb_request_options = {
 } as RequestInit;
 
 let msg_handler = new MessageHandler();
-const { LiveMessagesPage } = await import("./pages/live_messages");
-const live_messages_page = new LiveMessagesPage();
+let live_messages_page: LiveMessagesPage | undefined = undefined;
+// const live_messages_page = new LiveMessagesPage();
+
+let current_page: string | null = null;
 
 $((): void => {
+  detect_url();
   const menuIconButton = document.querySelector("[data-menu-icon-btn]");
   const sidebar = document.querySelector("[data-sidebar]");
 
@@ -113,9 +117,17 @@ $((): void => {
     // New acars message.
     const delete_id = msg_handler.acars_message(msg.msghtml);
     // If the message is a new message, then we need to update the page.
-    if (msg.done_loading === true) {
+    if (
+      msg.done_loading === true &&
+      current_page === "live_messages" &&
+      live_messages_page
+    ) {
       live_messages_page.update_page(msg_handler.get_all_messages());
-    } else if (typeof msg.done_loading === "undefined") {
+    } else if (
+      typeof msg.done_loading === "undefined" &&
+      current_page === "live_messages" &&
+      live_messages_page
+    ) {
       live_messages_page.update_page(msg_handler.get_message_by_id(delete_id));
     }
   });
@@ -181,8 +193,21 @@ $((): void => {
     console.error(e);
   });
 
-  live_messages_page.update_page();
+  if (current_page === "live_messages" && live_messages_page)
+    live_messages_page.update_page(undefined);
 });
+
+async function detect_url() {
+  const queryString = window.location.search;
+  const urlParams = new URLSearchParams(queryString);
+  const url = urlParams.get("page");
+  if (url) {
+  } else {
+    const { LiveMessagesPage } = await import("./pages/live_messages");
+    live_messages_page = new LiveMessagesPage();
+    current_page = "live_messages";
+  }
+}
 
 async function update_adsb(): Promise<void> {
   fetch(adsb_url, adsb_request_options)
@@ -203,12 +228,14 @@ window.nav_left = (uid: string): void => {
   if (!uid) return;
 
   msg_handler.update_selected_tab(uid);
-  live_messages_page.update_page_in_place(msg_handler.get_message_by_id(uid));
+  if (live_messages_page)
+    live_messages_page.update_page_in_place(msg_handler.get_message_by_id(uid));
 };
 
 window.nav_right = (uid: string): void => {
   if (!uid) return;
 
   msg_handler.update_selected_tab(uid, "right");
-  live_messages_page.update_page_in_place(msg_handler.get_message_by_id(uid));
+  if (live_messages_page)
+    live_messages_page.update_page_in_place(msg_handler.get_message_by_id(uid));
 };

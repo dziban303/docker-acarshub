@@ -247,3 +247,8 @@ export interface alert_terms {
   text_terms: string[];
   ignore: string[];
 }
+
+export interface LiveMessagesPage {
+  update_page(planes: plane[] | undefined): void;
+  update_page_in_place(planes: plane[] | undefined): void;
+}
