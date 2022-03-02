@@ -1,7 +1,3 @@
-body {
-  margin: 0;
-}
-
 *,
 *::before,
 *::after {
@@ -32,11 +28,15 @@ body {
   --mono-fonts: Menlo, Monaco, Consolas, "Courier New", monospace;
 }
 body {
+  margin: 0;
   font-family: var(--site-fonts);
   background-color: var(--dark-bg-grey-bg);
   color: var(--dark-bg-text-color);
   -ms-overflow-style: none; /* for Internet Explorer, Edge */
   scrollbar-width: none; /* for Firefox */
+  max-width: 100vw;
+  max-height: 100vh;
+  overflow-y: hidden;
 }
 
 .header {
