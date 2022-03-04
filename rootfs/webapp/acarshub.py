@@ -608,7 +608,6 @@ def main_connect():
             {
                 "vdlm": acarshub_configuration.ENABLE_VDLM,
                 "acars": acarshub_configuration.ENABLE_ACARS,
-                "arch": acarshub_configuration.ARCH,
                 "adsb": {
                     "enabled": acarshub_configuration.ENABLE_ADSB,
                     "lat": acarshub_configuration.ADSB_LAT,
