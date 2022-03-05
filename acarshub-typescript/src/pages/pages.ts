@@ -29,4 +29,8 @@ export class Page {
   update_page() {
     console.log(`Updating ${this.name} page`);
   }
+
+  set_page_inactive() {}
+
+  set_page_active() {}
 }
