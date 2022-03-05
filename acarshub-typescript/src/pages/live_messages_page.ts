@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with acarshub.  If not, see <http://www.gnu.org/licenses/>.
 
+import { get_setting } from "src/acarshub";
 import { acars_msg, plane } from "src/interfaces";
 import {
   generate_messages_html_from_planes,
@@ -52,7 +53,7 @@ export class LiveMessagesPage extends Page {
       $(this.content_area).html("No data received yet.");
       return;
     }
-
+    const num_planes = Number(get_setting("live_messages_page_num_items"));
     if (this.current_message_string) {
       $(`#${planes[0].uid}_container`).remove();
 
@@ -63,7 +64,8 @@ export class LiveMessagesPage extends Page {
       // After updating the tree we may exceed the length. If so, remove the last element
 
       while (
-        $(`${this.content_area} div.acars_message_container`).length > 20
+        $(`${this.content_area} div.acars_message_container`).length >
+        num_planes
       ) {
         $(".acars_message_container:last").remove();
       }
@@ -72,11 +74,6 @@ export class LiveMessagesPage extends Page {
     } else {
       // This is a new load and we need to populate the DOM tree
       this.current_message_string = generate_messages_html_from_planes(planes);
-      //   this.current_message_string = display_messages(
-      //     this.lm_msgs_received.get_all_messages(),
-      //     this.selected_tabs,
-      //     true
-      //   );
       $(this.content_area).html(this.current_message_string);
     }
   }
