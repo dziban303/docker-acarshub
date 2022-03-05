@@ -2,6 +2,8 @@
 // This file is part of acarshub <https://github.com/sdr-enthusiasts/docker-acarshub>.
 
 import { acars_msg, plane } from "src/interfaces";
+import { get_setting } from "../acarshub";
+import { feet_to_meters } from "./math_conversions";
 
 // acarshub is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -100,7 +102,7 @@ function message_top_row(acars_message: acars_msg): string {
 
   output += `<div class="acars_message_row">`;
   output += `<div class="message_from"><strong>${acars_message.message_type}</strong> from <strong>${acars_message.station_id}</strong></div>`;
-  output += `<div class="message_time"><strong>${timestamp}</strong></div>`;
+  output += `<div class="message_time"><strong>${timestamp.toLocaleString()}</strong></div>`;
   output += "</div>";
 
   return output;
@@ -192,8 +194,25 @@ function generate_message_body(acars_message: acars_msg): string {
   }
 
   if (has_field(acars_message, "alt")) {
-    // TODO: convert to meters if setting is set
-    output += `<strong>Altitude:</strong> ${acars_message.alt?.toLocaleString()} Feet<br>`;
+    const altitude = acars_message.alt || 0;
+    let output_alt = "";
+    if (!get_setting("general_use_metric_altitude")) {
+      if (
+        !get_setting("general_convert_to_flight_levels") ||
+        altitude < 18000
+      ) {
+        output_alt = altitude + " feet";
+      } else {
+        output_alt = "FL" + altitude / 100;
+      }
+    } else {
+      output_alt =
+        feet_to_meters(altitude).toLocaleString(undefined, {
+          maximumFractionDigits: 0,
+          minimumFractionDigits: 0,
+        }) + " meters";
+    }
+    output += `<strong>Altitude:</strong> ${output_alt}<br>`;
   }
 
   output += `<div class="text_fields">`;
@@ -366,7 +385,6 @@ function generate_footer(planes: plane, acars_message: acars_msg): string {
 
 function has_field(acars_message: acars_msg, field: string): boolean {
   return (
-    // @ts-expect-error
     typeof acars_message[field] !== "undefined" && acars_message[field] !== ""
   );
 }
