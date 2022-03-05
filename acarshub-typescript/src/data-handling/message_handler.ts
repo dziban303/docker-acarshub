@@ -15,6 +15,7 @@
 // along with acarshub.  If not, see <http://www.gnu.org/licenses/>.
 
 import { MessageDecoder } from "@airframes/acars-decoder/dist/MessageDecoder";
+import { get_setting } from "src/acarshub";
 import {
   acars_msg,
   adsb,
@@ -508,11 +509,11 @@ export class MessageHandler {
 
   get_all_messages(): plane[] {
     let output = [] as plane[];
-
+    const num_planes = Number(get_setting("live_messages_page_num_items"));
     Object.values(this.planes).every((plane) => {
       if (plane.messages && plane.messages.length > 0) output.push(plane);
 
-      if (output.length < 20) return true;
+      if (output.length < num_planes) return true;
       return false;
     });
 
