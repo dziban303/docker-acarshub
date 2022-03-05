@@ -47,6 +47,10 @@ export class Settings {
     this.live_map_show_only_planes_with_messages_init();
   }
 
+  get_all_settings() {
+    return this.settings;
+  }
+
   get_alerts_play_sound() {
     return this.settings.alerts_play_sound;
   }
@@ -330,9 +334,10 @@ export class Settings {
         convert_to_flight_levels
       );
     } else {
+      console.log("here");
       localStorage.setItem(
         "convert_to_flight_levels",
-        JSON.stringify(this.settings.convert_to_flight_levels)
+        JSON.stringify(this.settings.general_convert_to_flight_levels)
       );
     }
   }

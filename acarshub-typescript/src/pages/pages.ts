@@ -26,6 +26,10 @@ export class Page {
     this.name = name;
   }
 
+  update_title_bar() {
+    $(document).attr("title", `ACARS Hub: ${this.name}`);
+  }
+
   update_page() {
     console.log(`Updating ${this.name} page`);
   }

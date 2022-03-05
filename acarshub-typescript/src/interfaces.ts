@@ -273,6 +273,12 @@ export interface alert_terms {
 export interface LiveMessagesPage {
   update_page(planes: plane[] | undefined): void;
   update_page_in_place(planes: plane[] | undefined): void;
+  set_page_inactive(): void;
+  set_page_active(): void;
 }
 
-export interface SettingsPage {}
+export interface SettingsPage {
+  update_page(): void;
+  set_page_inactive(): void;
+  set_page_active(): void;
+}

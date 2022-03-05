@@ -26,7 +26,15 @@ export class LiveMessagesPage extends Page {
 
   constructor() {
     super("Live Messages");
+  }
+
+  set_page_active(): void {
+    this.update_title_bar();
     $(this.content_area).html("Welcome to ACARS Hub. Waiting for data...");
+  }
+
+  set_page_inactive(): void {
+    this.current_message_string = "";
   }
 
   update_page_in_place(planes: plane[] | undefined = undefined) {

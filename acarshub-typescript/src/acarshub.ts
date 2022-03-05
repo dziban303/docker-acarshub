@@ -65,8 +65,8 @@ const settings = new Settings();
 let current_page: string | null = null;
 let settings_page: SettingsPage | undefined = undefined;
 
-$((): void => {
-  detect_url();
+$(async (): Promise<void> => {
+  await detect_url();
   const menuIconButton = document.querySelector("[data-menu-icon-btn]");
   const sidebar = document.querySelector("[data-sidebar]");
 
@@ -194,19 +194,34 @@ $((): void => {
     console.error(e);
   });
 
-  if (current_page === "live_messages" && live_messages_page)
+  if (current_page === "live_messages" && live_messages_page) {
+    live_messages_page.set_page_active();
     live_messages_page.update_page(undefined);
+  } else if (current_page === "settings" && settings_page) {
+    settings_page.set_page_active();
+    settings_page.update_page();
+  }
+
+  load_all_pages();
 });
 
 async function detect_url() {
   const queryString = window.location.search;
   const urlParams = new URLSearchParams(queryString);
   const url = urlParams.get("page");
-  if (url) {
+  $(".sidebar-list-item").removeClass("active");
+  if (url && url !== "live_messages") {
+    if (url == "settings") {
+      const { SettingsPage } = await import("./pages/settings_page");
+      settings_page = new SettingsPage();
+      current_page = "settings";
+      $("#settings_link").addClass("active");
+    }
   } else {
     const { LiveMessagesPage } = await import("./pages/live_messages_page");
     live_messages_page = new LiveMessagesPage();
     current_page = "live_messages";
+    $("#live_messages_link").addClass("active");
   }
 }
 
@@ -256,3 +271,54 @@ window.nav_right = (uid: string): void => {
   if (live_messages_page)
     live_messages_page.update_page_in_place(msg_handler.get_message_by_id(uid));
 };
+
+window.sidebar_nav_link = (
+  page_id: string | undefined = undefined,
+  push_state = true
+): void => {
+  if (!page_id) {
+    const urlParams = new URLSearchParams(window.location.search);
+    page_id = urlParams.get("page") || "live_messages";
+  }
+
+  let index_acars_path = document.location.pathname.replace(
+    /about|search|stats|status|alerts|adsb/gi,
+    ""
+  );
+  index_acars_path += index_acars_path.endsWith("/") ? "" : "/";
+  let params = "";
+  let title = "";
+  $(".sidebar-list-item").removeClass("active");
+  if (page_id === undefined || page_id === "live_messages") {
+    current_page = "live_messages";
+    if (live_messages_page) {
+      live_messages_page.set_page_inactive();
+      live_messages_page.set_page_active();
+      live_messages_page.update_page(msg_handler.get_all_messages());
+      $("#live_messages_link").addClass("active");
+      params = "?page=live_messages";
+      title = "Live Messages";
+    }
+  } else if (page_id === "settings") {
+    current_page = "settings";
+    if (settings_page) {
+      settings_page.set_page_inactive();
+      settings_page.set_page_active();
+      settings_page.update_page();
+      $("#settings_link").addClass("active");
+      params = "?page=settings";
+      title = "ACARS Hub: Settings";
+    }
+  }
+
+  if (push_state)
+    window.history.pushState(
+      { page: index_acars_path + params },
+      title,
+      index_acars_path + params
+    );
+};
+
+$(window).on("popstate", (): void => {
+  window.sidebar_nav_link(undefined, false);
+});
