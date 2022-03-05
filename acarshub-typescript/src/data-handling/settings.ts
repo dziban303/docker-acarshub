@@ -141,22 +141,38 @@ export class Settings {
   }
 
   set_alerts_list_of_blacklist_terms(list_of_blacklist_terms: Array<string>) {
-    this.settings.alerts_list_of_blacklist_terms = list_of_blacklist_terms;
+    let formatted_input: Array<string> = [];
+    list_of_blacklist_terms.forEach((term) => {
+      if (term && term !== "") formatted_input.push(term.toUpperCase().trim());
+    });
+
+    this.settings.alerts_list_of_blacklist_terms = formatted_input;
     localStorage.setItem(
       "alerts_list_of_blacklist_terms",
-      JSON.stringify(list_of_blacklist_terms)
+      JSON.stringify(formatted_input)
     );
   }
 
   set_alerts_list_of_whitelist_terms(list_of_whitelist_terms: Array<string>) {
-    this.settings.alerts_list_of_whitelist_terms = list_of_whitelist_terms;
+    let formatted_input: Array<string> = [];
+
+    list_of_whitelist_terms.forEach((term) => {
+      if (term && term !== "") formatted_input.push(term.toUpperCase().trim());
+    });
+
+    this.settings.alerts_list_of_whitelist_terms = formatted_input;
     localStorage.setItem(
       "alerts_list_of_whitelist_terms",
-      JSON.stringify(list_of_whitelist_terms)
+      JSON.stringify(formatted_input)
     );
   }
 
   set_adsb_update_rate(adsb_update_rate: number) {
+    // ADSB Update Rate has to be between .5 and 60 seconds
+    if (isNaN(adsb_update_rate)) adsb_update_rate = 5;
+    if (adsb_update_rate < 0.5) adsb_update_rate = 0.5;
+    else if (adsb_update_rate > 60) adsb_update_rate = 60;
+
     this.settings.adsb_update_rate = adsb_update_rate;
     localStorage.setItem("adsb_update_rate", JSON.stringify(adsb_update_rate));
   }
@@ -170,18 +186,29 @@ export class Settings {
   }
 
   set_live_map_range_ring_color(range_ring_color: string) {
-    this.settings.live_map_range_ring_color = range_ring_color;
-    localStorage.setItem(
-      "live_map_range_ring_color",
-      JSON.stringify(range_ring_color)
-    );
+    if (!range_ring_color.startsWith("#"))
+      range_ring_color = "#" + range_ring_color;
+    if (/^#([0-9A-F]{3}){1,2}$/i.test(range_ring_color)) {
+      this.settings.live_map_range_ring_color = range_ring_color;
+      localStorage.setItem(
+        "live_map_range_ring_color",
+        JSON.stringify(range_ring_color)
+      );
+    }
   }
 
   set_live_map_range_ring_miles(range_ring_miles: Array<number>) {
-    this.settings.live_map_range_ring_miles = range_ring_miles;
+    let formatted_input: Array<number> = [];
+    range_ring_miles.forEach((miles) => {
+      if (!isNaN(miles) && miles > 0) formatted_input.push(miles);
+    });
+
+    formatted_input.sort();
+
+    this.settings.live_map_range_ring_miles = formatted_input;
     localStorage.setItem(
       "live_map_range_ring_miles",
-      JSON.stringify(range_ring_miles)
+      JSON.stringify(formatted_input)
     );
   }
 
@@ -227,6 +254,10 @@ export class Settings {
   }
 
   set_live_messages_page_num_items(num_items: number) {
+    if (!isNaN(num_items)) num_items = 20;
+    if (num_items < 1) num_items = 20;
+    if (num_items > 50) num_items = 50;
+
     this.settings.live_messages_page_num_items = num_items;
     localStorage.setItem(
       "live_messages_page_num_items",

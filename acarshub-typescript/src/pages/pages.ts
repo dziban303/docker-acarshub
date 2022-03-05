@@ -30,7 +30,11 @@ export class Page {
     console.log(`Updating ${this.name} page`);
   }
 
-  set_page_inactive() {}
+  set_page_inactive() {
+    console.log(`Setting ${this.name} page inactive`);
+  }
 
-  set_page_active() {}
+  set_page_active() {
+    console.log(`Setting ${this.name} page active`);
+  }
 }
