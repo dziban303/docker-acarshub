@@ -7,7 +7,7 @@ const CopyPlugin = require("copy-webpack-plugin");
 
 let config = {
   entry: {
-    acarshub: path.resolve(__dirname, "src") + "/index.ts",
+    acarshub: path.resolve(__dirname, "src") + "/acarshub.ts",
   },
   module: {
     rules: [
