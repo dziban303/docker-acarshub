@@ -18,7 +18,7 @@ import { acars_msg, plane } from "src/interfaces";
 import {
   generate_messages_html_from_planes,
   generate_message_group_html_from_plane,
-} from "../processing/message_html_generator";
+} from "../data-handling/message_html_generator";
 import { Page } from "./pages";
 
 export class LiveMessagesPage extends Page {
