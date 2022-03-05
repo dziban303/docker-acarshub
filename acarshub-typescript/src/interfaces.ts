@@ -33,6 +33,7 @@ export interface plane {
 }
 
 export interface acars_msg {
+  [index: string]: any;
   timestamp: number;
   station_id: string;
   toaddr?: string;
@@ -241,6 +242,27 @@ export interface status_external_formats {
   ];
 }
 
+export interface LocalStorageSettings {
+  [index: string]: any;
+  general_use_metric_altitude: boolean;
+  general_use_metric_distance: boolean;
+  general_convert_to_flight_levels: boolean;
+  alerts_play_sound: boolean;
+  alerts_list_of_blacklist_terms: Array<string>;
+  alerts_list_of_whitelist_terms: Array<string>;
+  adsb_update_rate: number;
+  live_map_show_range_rings: boolean;
+  live_map_range_ring_color: string;
+  live_map_range_ring_miles: Array<number>;
+  live_map_show_adsb_trails: boolean; // TODO: save adsb position history
+  live_map_show_datablocks: boolean;
+  live_map_show_full_datablocks: boolean;
+  live_map_show_only_planes_with_messages: boolean;
+  live_messages_page_num_items: number;
+  live_messages_page_exclude_labels: Array<string>;
+  live_messages_page_exclude_empty: boolean;
+}
+
 // Interface for setting alert terms
 
 export interface alert_terms {
@@ -252,3 +274,5 @@ export interface LiveMessagesPage {
   update_page(planes: plane[] | undefined): void;
   update_page_in_place(planes: plane[] | undefined): void;
 }
+
+export interface SettingsPage {}
