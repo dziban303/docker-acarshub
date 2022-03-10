@@ -57,6 +57,7 @@ let adsb_enabled = false;
 let adsb_url: string = "";
 let adsb_interval: any;
 let adsb_getting_data: boolean = false;
+let adsb_update_interval: number = 0;
 let adsb_request_options = {
   method: "GET",
 } as RequestInit;
@@ -85,35 +86,7 @@ $(async (): Promise<void> => {
 
   socket.on("features_enabled", function (msg: decoders): void {
     adsb_url = index_acars_url + "data/aircraft.json";
-    if (msg.adsb.enabled === true) {
-      if (msg.adsb.bypass) {
-        adsb_url = msg.adsb.url;
-        adsb_request_options["mode"] = "cors";
-      }
-
-      // Check to see if the adsb interval already exists.
-      // We want to do this because if the client disconnects it will
-      // receive all of the 'on connect' data again, and another adsb interval
-      // would be spawned.
-
-      // FIXME: Remove this false check. ADSB is shut off to reduce problem space for now
-      if (false && !adsb_interval) {
-        update_adsb();
-        adsb_interval = setInterval(() => {
-          update_adsb();
-        }, 5000);
-      }
-    } else {
-      adsb_enabled = false;
-    }
-
-    // If for some reason ADSB was ever turned off on the back end and was enabled for the client, turn off the updater
-    // And update the web app to remove menu and destroy costly background assets
-    if (!msg.adsb.enabled && adsb_interval != null) {
-      adsb_enabled = false;
-      clearInterval(adsb_interval);
-      adsb_interval = null;
-    }
+    init_adsb(msg);
   });
 
   socket.on("acars_msg", function (msg: html_msg) {
@@ -242,6 +215,42 @@ async function load_all_pages() {
   }
 }
 
+function init_adsb(msg: decoders | undefined = undefined): void {
+  // If for some reason ADSB was ever turned off on the back end and was enabled for the client, turn off the updater
+  // And update the web app to remove menu and destroy costly background assets
+  if (msg) adsb_enabled = msg.adsb.enabled;
+  if (
+    adsb_enabled &&
+    (adsb_interval !== null || adsb_interval !== undefined) &&
+    settings.get_adsb_update_rate() !== adsb_update_interval
+  ) {
+    console.warn("Clearing adsb_interval");
+    clearInterval(adsb_interval);
+    adsb_interval = null;
+  }
+  if (adsb_enabled) {
+    if (msg && msg.adsb.bypass) {
+      adsb_url = msg.adsb.url;
+      adsb_request_options["mode"] = "cors";
+    }
+
+    // Check to see if the adsb interval already exists.
+    // We want to do this because if the client disconnects it will
+    // receive all of the 'on connect' data again, and another adsb interval
+    // would be spawned.
+
+    if (!adsb_interval) {
+      update_adsb();
+      adsb_interval = setInterval(() => {
+        update_adsb();
+      }, settings.get_adsb_update_rate() * 1000);
+      console.log(
+        `ADSB update at ${settings.get_adsb_update_rate() * 1000} interval`
+      );
+    }
+  }
+}
+
 async function update_adsb(): Promise<void> {
   fetch(adsb_url, adsb_request_options)
     .then((response) => {
@@ -283,6 +292,7 @@ window.save_settings = (): void => {
   }
 
   socket.emit("update_alerts", settings.get_all_alert_terms(), "/main");
+  init_adsb();
 };
 
 window.nav_left = (uid: string): void => {
