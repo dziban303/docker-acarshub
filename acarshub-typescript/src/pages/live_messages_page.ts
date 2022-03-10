@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with acarshub.  If not, see <http://www.gnu.org/licenses/>.
 
-import { get_setting } from "src/acarshub";
+import { get_setting } from "../acarshub";
 import { acars_msg, plane } from "src/interfaces";
 import {
   generate_messages_html_from_planes,
@@ -48,13 +48,13 @@ export class LiveMessagesPage extends Page {
     this.current_message_string = $(this.content_area).html();
   }
 
-  update_page(planes: plane[] | undefined = undefined) {
+  update_page(planes: plane[] | undefined = undefined, dont_reset_page = true) {
     if (!planes) {
       $(this.content_area).html("No data received yet.");
       return;
     }
     const num_planes = Number(get_setting("live_messages_page_num_items"));
-    if (this.current_message_string) {
+    if (this.current_message_string && dont_reset_page) {
       $(`#${planes[0].uid}_container`).remove();
 
       // Display the new message at the front of the DOM tree
@@ -72,7 +72,7 @@ export class LiveMessagesPage extends Page {
       // Save the DOM tree HTML because this is a hacky hack to get the page refreshed on page in
       this.current_message_string = $(this.content_area).html();
     } else {
-      // This is a new load and we need to populate the DOM tree
+      // This is a new load or we need to refresh the entire DOM tree
       this.current_message_string = generate_messages_html_from_planes(planes);
       $(this.content_area).html(this.current_message_string);
     }

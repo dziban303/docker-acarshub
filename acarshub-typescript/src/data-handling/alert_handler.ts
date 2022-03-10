@@ -1,22 +1,17 @@
-import { acars_msg, alert_terms } from "src/interfaces";
+import { get_alerts } from "../acarshub";
+import { acars_msg } from "src/interfaces";
 
 export class AlertHandler {
-  current_terms: alert_terms | undefined = undefined;
-  constructor() {
-    this.current_terms = {} as alert_terms;
-  }
-
-  set_terms(alerts: alert_terms | undefined): void {
-    if (alerts) this.current_terms = alerts;
-  }
+  constructor() {}
 
   find_alerts(acars_message: acars_msg): Array<string> {
+    const current_terms = get_alerts();
     if (!acars_message) {
       console.error("Blank Message. Skipping alert matching");
       return [];
     }
 
-    if (!this.current_terms) {
+    if (!current_terms) {
       console.error("No Alert Terms. Skipping alert matching");
       return [];
     }
@@ -24,7 +19,7 @@ export class AlertHandler {
     if (acars_message.text) {
       // first make sure we shouldn't ignore this
 
-      const should_not_ignore = this.current_terms.ignore.every((term) => {
+      const should_not_ignore = current_terms.ignore.every((term) => {
         // TODO: fix TS !
         return (
           acars_message
@@ -36,7 +31,7 @@ export class AlertHandler {
       if (should_not_ignore) {
         let matches: Array<string> = [];
 
-        this.current_terms.text_terms.forEach((term) => {
+        current_terms.text_terms.forEach((term) => {
           // TODO: fix TS !
           if (
             acars_message

@@ -28,6 +28,8 @@ import {
   alert_terms,
   LiveMessagesPage,
   SettingsPage,
+  LocalStorageSettings,
+  LocalStorageSettingsDisplayProperties,
 } from "./interfaces";
 
 // CSS loading
@@ -138,12 +140,15 @@ $(async (): Promise<void> => {
   });
 
   socket.on("terms", function (msg: alert_terms): void {
-    msg_handler.set_alerts(msg);
+    settings.set_all_alert_terms(msg);
+    if (current_page === "settings" && settings_page) {
+      settings_page.update_alerts();
+    }
   });
 
   // alert term graph
   socket.on("alert_terms", function (msg: alert_term): void {
-    // stats_page.alert_terms(msg);
+    return;
   });
 
   // sidebar frequency count
@@ -254,7 +259,31 @@ export function get_setting(key: string): string {
   return settings.get_setting(key);
 }
 
+export function get_all_settings(): LocalStorageSettings {
+  return settings.get_all_settings();
+}
+
+export function get_display_settings() {
+  return settings.get_display_settings();
+}
+
+export function get_alerts() {
+  return {
+    ignore: settings.get_alerts_list_of_blacklist_terms(),
+    text_terms: settings.get_alerts_list_of_whitelist_terms(),
+  } as alert_terms;
+}
+
 // register window handlers for callback to the correct object
+
+window.save_settings = (): void => {
+  settings.save_settings();
+  if (current_page === "settings" && settings_page) {
+    settings_page.update_page();
+  }
+
+  socket.emit("update_alerts", settings.get_all_alert_terms(), "/main");
+};
 
 window.nav_left = (uid: string): void => {
   if (!uid) return;

@@ -1,27 +1,12 @@
-import { LocalStorageSettings } from "src/interfaces";
+import { alert_term, alert_terms, LocalStorageSettings } from "src/interfaces";
+import {
+  default_settings,
+  default_settings_display_properties,
+} from "./default_settings";
 
 export class Settings {
-  settings = {
-    general_use_metric_altitude: false,
-    general_use_metric_distance: false,
-    general_convert_to_flight_levels: true,
-
-    alerts_play_sound: false,
-    alerts_list_of_blacklist_terms: [],
-    alerts_list_of_whitelist_terms: [],
-    adsb_update_rate: 5,
-    live_map_show_range_rings: true,
-    live_map_range_ring_color: "#00000",
-    live_map_range_ring_miles: [0, 25, 50, 100, 200],
-    live_map_show_adsb_trails: false, // TODO: save adsb position history
-    live_map_show_datablocks: false,
-    live_map_show_full_datablocks: false,
-    live_map_show_only_planes_with_messages: false,
-
-    live_messages_page_num_items: 20,
-    live_messages_page_exclude_labels: [] as Array<string>,
-    live_messages_page_exclude_empty: false,
-  } as LocalStorageSettings;
+  settings = default_settings;
+  display_settings = default_settings_display_properties;
 
   constructor() {
     this.init();
@@ -34,6 +19,7 @@ export class Settings {
     this.general_use_metric_altitude_init();
     this.general_use_metric_distance_init();
     this.general_convert_to_flight_levels_init();
+    this.general_transition_altitude_init();
     this.alerts_play_sound_init();
     this.alerts_list_of_blacklist_terms_init();
     this.alerts_list_of_whitelist_terms_init();
@@ -47,8 +33,132 @@ export class Settings {
     this.live_map_show_only_planes_with_messages_init();
   }
 
+  save_settings() {
+    // get the value of the item from DOM
+    for (const key in this.settings) {
+      let value = undefined;
+      if ($(`#${key}`).is('input[type="checkbox"]'))
+        value = $(`#${key}`).is(":checked");
+      else if ($(`#${key}`).is('input[type="text"]'))
+        value = $(`#${key}`).val();
+      else if ($(`#${key}`).is('input[type="number"]'))
+        value = Number($(`#${key}`).val());
+      else
+        console.error(`Unknown type for ${key}: ${$(`#${key}`).attr("type")}`);
+
+      if (typeof value === "undefined") {
+        console.error("No value for key:", key, value);
+        continue;
+      }
+
+      switch (key) {
+        case "general_use_metric_altitude":
+          this.set_general_use_metric_altitude(
+            typeof value === "boolean" ? value : false
+          );
+          break;
+        case "general_use_metric_distance":
+          this.set_general_use_metric_distance(
+            typeof value === "boolean" ? value : false
+          );
+          break;
+        case "general_convert_to_flight_levels":
+          this.set_general_convert_to_flight_level(
+            typeof value === "boolean" ? value : false
+          );
+          break;
+        case "general_transition_altitude":
+          this.set_general_transfer_level(
+            typeof value === "number" ? value : 0
+          );
+          break;
+        case "alerts_play_sound":
+          this.set_alerts_play_sound(
+            typeof value === "boolean" ? value : false
+          );
+          break;
+        case "alerts_list_of_blacklist_terms":
+          let blacklist: Array<string> = [];
+
+          if (typeof value === "string") {
+            blacklist = value.split(",");
+            this.set_alerts_list_of_blacklist_terms(blacklist);
+          }
+          break;
+        case "alerts_list_of_whitelist_terms":
+          let whitelist: Array<string> = [];
+
+          if (typeof value === "string") {
+            whitelist = value.split(",");
+            this.set_alerts_list_of_whitelist_terms(whitelist);
+          }
+          break;
+        case "adsb_update_rate":
+          this.set_adsb_update_rate(typeof value === "number" ? value : 0);
+          break;
+        case "live_map_show_range_rings":
+          this.set_live_map_show_range_rings(
+            typeof value === "boolean" ? value : false
+          );
+          break;
+        case "live_map_range_ring_color":
+          this.set_live_map_range_ring_color(
+            typeof value === "string" ? value : ""
+          );
+          break;
+        case "live_map_range_ring_miles":
+          let input: Array<number> = [];
+          if (typeof value === "string") {
+            input = value.split(",").map(Number);
+          }
+          this.set_live_map_range_ring_miles(input);
+          break;
+        case "live_map_show_adsb_trails":
+          this.set_live_map_show_adsb_trails(
+            typeof value === "boolean" ? value : false
+          );
+          break;
+        case "live_map_show_datablocks":
+          this.set_live_map_show_datablocks(
+            typeof value === "boolean" ? value : false
+          );
+          break;
+        case "live_map_show_full_datablocks":
+          this.set_live_map_show_full_datablocks(
+            typeof value === "boolean" ? value : false
+          );
+          break;
+        case "live_map_show_only_planes_with_messages":
+          this.set_live_map_show_only_planes_with_messages(
+            typeof value === "boolean" ? value : false
+          );
+          break;
+        case "live_messages_page_num_items":
+          this.set_live_messages_page_num_items(
+            typeof value === "number" ? value : 0
+          );
+          break;
+        case "live_messages_page_exclude_labels":
+          break;
+        case "live_messages_page_exclude_empty":
+          this.set_live_messages_page_exclude_empty(
+            typeof value === "boolean" ? value : false
+          );
+          break;
+        default:
+          console.error("No value for key:", key);
+          break;
+      }
+    }
+    // save the value to the settings object
+  }
+
   get_all_settings() {
     return this.settings;
+  }
+
+  get_display_settings() {
+    return this.display_settings;
   }
 
   get_alerts_play_sound() {
@@ -107,6 +217,10 @@ export class Settings {
     return this.settings.general_convert_to_flight_levels;
   }
 
+  get_general_transfer_level() {
+    return this.settings.general_transition_altitude;
+  }
+
   get_live_messages_page_exclude_labels() {
     return this.settings.live_messages_page_exclude_labels;
   }
@@ -119,6 +233,18 @@ export class Settings {
     return this.settings.live_messages_page_exclude_empty;
   }
 
+  get_all_alert_terms() {
+    return {
+      ignore: this.settings.alerts_list_of_blacklist_terms,
+      terms: this.settings.alerts_list_of_whitelist_terms,
+    };
+  }
+
+  set_all_alert_terms(terms: alert_terms) {
+    this.set_alerts_list_of_blacklist_terms(terms.ignore);
+    this.set_alerts_list_of_whitelist_terms(terms.text_terms);
+  }
+
   set_general_convert_to_flight_level(convert_to_flight_levels: boolean) {
     this.settings.general_convert_to_flight_levels = convert_to_flight_levels;
   }
@@ -128,6 +254,17 @@ export class Settings {
     localStorage.setItem(
       "general_use_metric_altitude",
       JSON.stringify(use_metric_units)
+    );
+  }
+
+  set_general_transfer_level(transfer_level: number) {
+    if (isNaN(transfer_level)) transfer_level = 18000;
+    if (transfer_level < 0 || transfer_level > 18000) transfer_level = 18000;
+
+    this.settings.general_transition_altitude = transfer_level;
+    localStorage.setItem(
+      "general_transition_altitude",
+      JSON.stringify(transfer_level)
     );
   }
 
@@ -150,11 +287,9 @@ export class Settings {
       if (term && term !== "") formatted_input.push(term.toUpperCase().trim());
     });
 
+    formatted_input.sort();
+
     this.settings.alerts_list_of_blacklist_terms = formatted_input;
-    localStorage.setItem(
-      "alerts_list_of_blacklist_terms",
-      JSON.stringify(formatted_input)
-    );
   }
 
   set_alerts_list_of_whitelist_terms(list_of_whitelist_terms: Array<string>) {
@@ -164,11 +299,9 @@ export class Settings {
       if (term && term !== "") formatted_input.push(term.toUpperCase().trim());
     });
 
+    formatted_input.sort();
+
     this.settings.alerts_list_of_whitelist_terms = formatted_input;
-    localStorage.setItem(
-      "alerts_list_of_whitelist_terms",
-      JSON.stringify(formatted_input)
-    );
   }
 
   set_adsb_update_rate(adsb_update_rate: number) {
@@ -190,14 +323,17 @@ export class Settings {
   }
 
   set_live_map_range_ring_color(range_ring_color: string) {
+    range_ring_color = range_ring_color.toUpperCase().trim();
     if (!range_ring_color.startsWith("#"))
       range_ring_color = "#" + range_ring_color;
-    if (/^#([0-9A-F]{3}){1,2}$/i.test(range_ring_color)) {
+    if (/^#([0-9A-F]{3}){1,2}$/.test(range_ring_color)) {
       this.settings.live_map_range_ring_color = range_ring_color;
       localStorage.setItem(
         "live_map_range_ring_color",
         JSON.stringify(range_ring_color)
       );
+    } else {
+      console.error(`Input ${range_ring_color} is not a valid hex color`);
     }
   }
 
@@ -207,7 +343,9 @@ export class Settings {
       if (!isNaN(miles) && miles > 0) formatted_input.push(miles);
     });
 
-    formatted_input.sort();
+    formatted_input.sort((a, b) => {
+      return Number(a) - Number(b);
+    });
 
     this.settings.live_map_range_ring_miles = formatted_input;
     localStorage.setItem(
@@ -277,6 +415,14 @@ export class Settings {
     );
   }
 
+  set_live_map_show_only_planes_with_messages(show_planes: boolean) {
+    this.settings.live_map_show_only_planes_with_messages = show_planes;
+    localStorage.setItem(
+      "live_map_show_only_planes_with_messages",
+      JSON.stringify(show_planes)
+    );
+  }
+
   private lm_page_num_items_init() {
     const live_messages_page_num_items = localStorage.getItem(
       "live_messages_page_num_items"
@@ -325,18 +471,33 @@ export class Settings {
     }
   }
 
+  private general_transition_altitude_init() {
+    const general_transition_altitude = localStorage.getItem(
+      "general_transition_altitude"
+    );
+    if (general_transition_altitude) {
+      this.settings.general_transition_altitude = Number(
+        general_transition_altitude
+      );
+    } else {
+      localStorage.setItem(
+        "general_transition_altitude",
+        this.settings.general_transition_altitude.toString()
+      );
+    }
+  }
+
   private general_convert_to_flight_levels_init() {
     const convert_to_flight_levels = localStorage.getItem(
-      "convert_to_flight_levels"
+      "general_convert_to_flight_levels"
     );
     if (convert_to_flight_levels) {
-      this.settings.convert_to_flight_levels = JSON.parse(
+      this.settings.general_convert_to_flight_levels = JSON.parse(
         convert_to_flight_levels
       );
     } else {
-      console.log("here");
       localStorage.setItem(
-        "convert_to_flight_levels",
+        "general_convert_to_flight_levels",
         JSON.stringify(this.settings.general_convert_to_flight_levels)
       );
     }
@@ -387,35 +548,37 @@ export class Settings {
   }
 
   private alerts_list_of_blacklist_terms_init() {
-    const alerts_list_of_blacklist_terms = localStorage.getItem(
-      "alerts_list_of_blacklist_terms"
-    );
-    if (alerts_list_of_blacklist_terms) {
-      this.settings.alerts_list_of_blacklist_terms = JSON.parse(
-        alerts_list_of_blacklist_terms
-      );
-    } else {
-      localStorage.setItem(
-        "alerts_list_of_blacklist_terms",
-        JSON.stringify(this.settings.alerts_list_of_blacklist_terms)
-      );
-    }
+    return;
+    // const alerts_list_of_blacklist_terms = localStorage.getItem(
+    //   "alerts_list_of_blacklist_terms"
+    // );
+    // if (alerts_list_of_blacklist_terms) {
+    //   this.settings.alerts_list_of_blacklist_terms = JSON.parse(
+    //     alerts_list_of_blacklist_terms
+    //   );
+    // } else {
+    //   localStorage.setItem(
+    //     "alerts_list_of_blacklist_terms",
+    //     JSON.stringify(this.settings.alerts_list_of_blacklist_terms)
+    //   );
+    // }
   }
 
   private alerts_list_of_whitelist_terms_init() {
-    const alerts_list_of_whitelist_terms = localStorage.getItem(
-      "alerts_list_of_whitelist_terms"
-    );
-    if (alerts_list_of_whitelist_terms) {
-      this.settings.alerts_list_of_whitelist_terms = JSON.parse(
-        alerts_list_of_whitelist_terms
-      );
-    } else {
-      localStorage.setItem(
-        "alerts_list_of_whitelist_terms",
-        JSON.stringify(this.settings.alerts_list_of_whitelist_terms)
-      );
-    }
+    return;
+    // const alerts_list_of_whitelist_terms = localStorage.getItem(
+    //   "alerts_list_of_whitelist_terms"
+    // );
+    // if (alerts_list_of_whitelist_terms) {
+    //   this.settings.alerts_list_of_whitelist_terms = JSON.parse(
+    //     alerts_list_of_whitelist_terms
+    //   );
+    // } else {
+    //   localStorage.setItem(
+    //     "alerts_list_of_whitelist_terms",
+    //     JSON.stringify(this.settings.alerts_list_of_whitelist_terms)
+    //   );
+    // }
   }
 
   private adsb_update_rate_init() {

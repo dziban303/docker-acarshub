@@ -247,6 +247,7 @@ export interface LocalStorageSettings {
   general_use_metric_altitude: boolean;
   general_use_metric_distance: boolean;
   general_convert_to_flight_levels: boolean;
+  general_transition_altitude: number;
   alerts_play_sound: boolean;
   alerts_list_of_blacklist_terms: Array<string>;
   alerts_list_of_whitelist_terms: Array<string>;
@@ -263,6 +264,23 @@ export interface LocalStorageSettings {
   live_messages_page_exclude_empty: boolean;
 }
 
+export interface LocalStorageSettingsDisplayProperties {
+  [index: string]: SettingDisplayProperties;
+}
+
+export interface SettingDisplayProperties {
+  LocalStorageSettingPropertyName: string;
+  LocalStorageSettingPropertyType: string;
+  LocalStorageSettingPropertyDefault: any;
+  LocalStorageSettingPropertyAllowedValues?: Array<string>;
+  LocalStorageSettingPropertyDisplayCategory: string;
+  LocalStorageSettingPropertyDisplayName: string;
+  LocalStorageSettingPropertyToolTip: string;
+  LocalStorageSettingPropertyNumberMax?: number;
+  LocalStorageSettingPropertyNumberMin?: number;
+  LocalStorageSettingPropertyNumberStep?: number;
+}
+
 // Interface for setting alert terms
 
 export interface alert_terms {
@@ -271,7 +289,7 @@ export interface alert_terms {
 }
 
 export interface LiveMessagesPage {
-  update_page(planes: plane[] | undefined): void;
+  update_page(planes: plane[] | undefined, dont_reset_page?: boolean): void;
   update_page_in_place(planes: plane[] | undefined): void;
   set_page_inactive(): void;
   set_page_active(): void;
@@ -281,4 +299,5 @@ export interface SettingsPage {
   update_page(): void;
   set_page_inactive(): void;
   set_page_active(): void;
+  update_alerts(): void;
 }

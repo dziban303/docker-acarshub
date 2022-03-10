@@ -15,7 +15,7 @@
 // along with acarshub.  If not, see <http://www.gnu.org/licenses/>.
 
 import { MessageDecoder } from "@airframes/acars-decoder/dist/MessageDecoder";
-import { get_setting } from "src/acarshub";
+import { get_setting } from "../acarshub";
 import {
   acars_msg,
   adsb,
@@ -78,12 +78,6 @@ export class MessageHandler {
       }
       return this.planes.unshift.apply(this.planes, [p]);
     };
-  }
-
-  set_alerts(alerts: alert_terms) {
-    if (alerts) {
-      this.alert_handler.set_terms(alerts);
-    }
   }
 
   acars_message(msg: acars_msg) {

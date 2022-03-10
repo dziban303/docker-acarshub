@@ -243,7 +243,8 @@ body {
 
 /* ACARS Message CSS values */
 
-.acars_message_container {
+.acars_message_container,
+.settings_container {
   display: flex;
   flex-direction: column;
   /* align-items: center; */
@@ -319,7 +320,8 @@ body {
   max-width: 100%;
 }
 
-.text_fields {
+.text_fields,
+.settings_row {
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
@@ -327,6 +329,19 @@ body {
   overflow-wrap: break-word;
   word-wrap: break-word;
   margin-left: -1rem;
+}
+
+.settings_row {
+  margin-left: 0.5rem;
+  padding: 0.1rem;
+}
+
+.setting_item_left {
+  min-width: 30%;
+}
+
+.setting_item_right {
+  min-width: 68%;
 }
 
 .code {
