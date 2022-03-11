@@ -595,4 +595,25 @@ export class MessageHandler {
   sound_alert() {
     this.alert_handler.sound_alert();
   }
+
+  scan_for_new_alerts() {
+    this.planes.forEach((plane, index) => {
+      if (plane.messages) {
+        this.planes[index].has_alerts = false;
+        this.planes[index].num_alerts = 0;
+        plane.messages.forEach((message, msg_index) => {
+          const matched_terms = this.alert_handler.find_alerts(message);
+          if (matched_terms && matched_terms.length > 0) {
+            this.planes[index].messages[msg_index].matched = true;
+            this.planes[index].messages[msg_index].matched_text = matched_terms;
+            this.planes[index].has_alerts = true;
+            this.planes[index].num_alerts += 1;
+          } else {
+            this.planes[index].messages[msg_index].matched = false;
+            this.planes[index].messages[msg_index].matched_text = [];
+          }
+        });
+      }
+    });
+  }
 }

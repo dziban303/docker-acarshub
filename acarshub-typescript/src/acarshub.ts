@@ -125,8 +125,11 @@ $(async (): Promise<void> => {
 
   socket.on("terms", function (msg: alert_terms): void {
     settings.set_all_alert_terms(msg);
+    msg_handler.scan_for_new_alerts();
     if (current_page === "settings" && settings_page) {
       settings_page.update_alerts();
+    } else if (current_page == "live_messages" && live_messages_page) {
+      live_messages_page.update_page(msg_handler.get_all_messages(), false);
     }
   });
 
@@ -296,12 +299,11 @@ export function get_alerts() {
 
 // register window handlers for callback to the correct object
 
-window.save_settings = (): void => {
+window.save_settings = async (): Promise<void> => {
   settings.save_settings();
   if (current_page === "settings" && settings_page) {
     settings_page.update_page();
   }
-
   socket.emit("update_alerts", settings.get_all_alert_terms(), "/main");
   init_adsb();
 };

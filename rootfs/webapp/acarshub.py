@@ -765,6 +765,14 @@ def update_alerts(message, namespace):
     acarshub_helpers.acarshub_database.set_alert_terms(message["terms"])
     acarshub_helpers.acarshub_database.set_alert_ignore(message["ignore"])
     # TODO emit updated alert stats
+    socketio.emit(
+        "terms",
+        {
+            "text_terms": acarshub_helpers.acarshub_database.get_alert_terms(),
+            "ignore": acarshub_helpers.acarshub_database.get_alert_ignore(),
+        },
+        namespace="/main",
+    )
 
 
 @socketio.on("signal_freqs", namespace="/main")
