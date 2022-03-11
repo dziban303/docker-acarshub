@@ -48,11 +48,11 @@ export class MessageHandler {
     "alt",
   ] as Array<keyof acars_msg>;
 
-  constructor() {
+  constructor(acarshub_url: string) {
     // Overload the unshift operator for the planes array
     // The array should keep only 50 planes with messages if they DO NOT
     // have an ADSB position
-    this.alert_handler = new AlertHandler();
+    this.alert_handler = new AlertHandler(acarshub_url);
     this.planes.prepend = (p: plane) => {
       if (this.planes.length >= 50) {
         let indexes_to_delete: Array<number> = []; // All of the indexes with messages and ADSB positions
@@ -138,7 +138,10 @@ export class MessageHandler {
       });
     }
 
-    return this.planes[0].uid;
+    return {
+      uid: this.planes[0].uid,
+      has_alerts: this.planes[0].messages[0].matched,
+    };
   }
 
   adsb_message(adsb_positions: adsb) {
@@ -556,5 +559,9 @@ export class MessageHandler {
           this.planes[index].messages[current_tab_index + 1].uid;
       }
     }
+  }
+
+  sound_alert() {
+    this.alert_handler.sound_alert();
   }
 }

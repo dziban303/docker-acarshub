@@ -49,8 +49,13 @@ import { Settings } from "./data-handling/settings";
 let socket: Socket = <any>null;
 let socket_status: boolean = false;
 
-let index_acars_url: string = "";
-let index_acars_path: string = "";
+const index_acars_path = document.location.pathname.replace(
+  /about|search|stats|status|alerts|adsb/gi,
+  ""
+);
+let index_acars_url = document.location.origin + index_acars_path;
+index_acars_url += index_acars_path.endsWith("/") ? "" : "/";
+// const index_acars_url = index_acars_path + index_acars_path.endsWith("/") ? "" : "/";
 let index_acars_page: string = "";
 
 let adsb_enabled = false;
@@ -62,7 +67,7 @@ let adsb_request_options = {
   method: "GET",
 } as RequestInit;
 
-let msg_handler = new MessageHandler();
+let msg_handler = new MessageHandler(index_acars_url);
 let live_messages_page: LiveMessagesPage | undefined = undefined;
 const settings = new Settings();
 let current_page: string | null = null;
@@ -78,8 +83,7 @@ $(async (): Promise<void> => {
       sidebar.classList.toggle("open");
     });
   }
-  index_acars_path += index_acars_path.endsWith("/") ? "" : "/";
-  index_acars_url = document.location.origin + index_acars_path;
+
   socket = io(`${document.location.origin}/main`, {
     path: index_acars_path + "socket.io",
   });
@@ -91,7 +95,8 @@ $(async (): Promise<void> => {
 
   socket.on("acars_msg", function (msg: html_msg) {
     // New acars message.
-    const delete_id = msg_handler.acars_message(msg.msghtml);
+    const processed_msg = msg_handler.acars_message(msg.msghtml);
+
     // If the message is a new message, then we need to update the page.
     if (
       msg.done_loading === true &&
@@ -104,7 +109,13 @@ $(async (): Promise<void> => {
       current_page === "live_messages" &&
       live_messages_page
     ) {
-      live_messages_page.update_page(msg_handler.get_message_by_id(delete_id));
+      live_messages_page.update_page(
+        msg_handler.get_message_by_id(processed_msg.uid)
+      );
+    }
+
+    if (typeof msg.done_loading === "undefined" && processed_msg.has_alerts) {
+      msg_handler.sound_alert();
     }
   });
   // signal level graph
@@ -320,11 +331,6 @@ window.sidebar_nav_link = (
     page_id = urlParams.get("page") || "live_messages";
   }
 
-  let index_acars_path = document.location.pathname.replace(
-    /about|search|stats|status|alerts|adsb/gi,
-    ""
-  );
-  index_acars_path += index_acars_path.endsWith("/") ? "" : "/";
   let params = "";
   let title = "";
   $(".sidebar-list-item").removeClass("active");

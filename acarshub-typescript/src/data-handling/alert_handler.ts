@@ -1,8 +1,23 @@
-import { get_alerts } from "../acarshub";
+import { get_alerts, get_setting } from "../acarshub";
 import { acars_msg } from "src/interfaces";
 
 export class AlertHandler {
-  constructor() {}
+  alert_sound: HTMLAudioElement | undefined;
+  constructor(acarshub_url: string) {
+    this.alert_sound = new Audio(`${acarshub_url}static/sounds/alert.mp3`);
+  }
+
+  async sound_alert(): Promise<void> {
+    if (get_setting("alerts_play_sound")) {
+      try {
+        if (this.alert_sound) {
+          await this.alert_sound.play();
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  }
 
   find_alerts(acars_message: acars_msg): Array<string> {
     const current_terms = get_alerts();
