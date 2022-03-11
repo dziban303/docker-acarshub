@@ -23,6 +23,7 @@ import {
   plane,
   planes_array,
   alert_terms,
+  aircraft_position,
 } from "src/interfaces";
 import { AlertHandler } from "./alert_handler";
 
@@ -128,6 +129,7 @@ export class MessageHandler {
         hex: hex,
         tail: tail,
         position: undefined,
+        position_history: [] as Array<aircraft_position>,
         messages: processed_message ? processed_message : [],
         has_alerts: matched_terms && matched_terms.length > 0,
         num_alerts: matched_terms && matched_terms.length > 0 ? 1 : 0,
@@ -160,6 +162,7 @@ export class MessageHandler {
           hex: hex,
           tail: tail,
           position: target,
+          position_history: [] as Array<aircraft_position>,
           messages: [],
           has_alerts: false,
           num_alerts: 0,
@@ -367,11 +370,39 @@ export class MessageHandler {
   ) {
     if (!index || !plane) return;
 
+    const previous_position = this.planes[index].position || undefined;
     this.planes[index].position = plane;
     this.planes[index].last_updated = this.adsb_last_update_time;
     this.planes[index].hex = this.get_hex_from_adsb(plane);
     this.planes[index].callsign = this.get_callsign_from_adsb(plane);
     this.planes[index].tail = this.get_tail_from_adsb(plane);
+
+    if (previous_position) {
+      // TODO: this is very imprecise and needs tweaking
+      // Do we need a hard upper limit on position histories?
+      // Should we save *EVERY* position or just those with some significant change in direction
+      // altitude etc?
+
+      this.planes[index].position_history.unshift({
+        gs: previous_position.gs || undefined,
+        ias: previous_position.ias || undefined,
+        tas: previous_position.tas || undefined,
+        mach: previous_position.mach || undefined,
+        track: previous_position.track || undefined,
+        track_rate: previous_position.track_rate || undefined,
+        roll: previous_position.roll || undefined,
+        mag_heading: previous_position.mag_heading || undefined,
+        true_heading: previous_position.true_heading || undefined,
+        baro_rate: previous_position.baro_rate || undefined,
+        geom_rate: previous_position.geom_rate || undefined,
+        lat: previous_position.lat || undefined,
+        lon: previous_position.lon || undefined,
+      } as aircraft_position);
+
+      if (this.planes[index].position_history.length > 50) {
+        this.planes[index].position_history.pop();
+      }
+    }
   }
 
   match_plane_from_id(

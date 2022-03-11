@@ -29,7 +29,24 @@ export interface plane {
   manually_selected_tab: boolean;
   messages: acars_msg[];
   position?: adsb_plane;
+  position_history: aircraft_position[];
   last_updated?: number;
+}
+
+export interface aircraft_position {
+  gs?: number;
+  ias?: number;
+  tas?: number;
+  mach?: number;
+  track?: number;
+  track_rate?: number;
+  roll?: number;
+  mag_heading?: number;
+  true_heading?: number;
+  baro_rate?: number;
+  geom_rate?: number;
+  lat?: number;
+  lon?: number;
 }
 
 export interface acars_msg {
