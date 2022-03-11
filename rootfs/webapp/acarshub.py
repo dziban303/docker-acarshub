@@ -581,6 +581,7 @@ def adsb():
 
 @app.errorhandler(404)
 def not_found(e):
+    acarshub_logging.log(f"{e}", "webapp", acarshub_logging.LOG_LEVEL["ERROR"])
     return redirect(url_for("index"))
 
 
