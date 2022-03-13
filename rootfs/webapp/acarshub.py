@@ -637,18 +637,19 @@ def main_connect():
         )
         acarshub_logging.acars_traceback(e, "webapp")
 
-    try:
-        socketio.emit(
-            "labels",
-            {"labels": acarshub_helpers.acarshub_database.get_message_label_json()},
-            to=requester,
-            namespace="/main",
-        )
-    except Exception as e:
-        acarshub_logging.log(f"Main Connect: Error sending labels: {e}", "webapp")
-        acarshub_logging.acars_traceback(e, "webapp")
+    # try:
+    #     socketio.emit(
+    #         "labels",
+    #         {"labels": acarshub_helpers.acarshub_database.get_message_label_json()},
+    #         to=requester,
+    #         namespace="/main",
+    #     )
+    # except Exception as e:
+    #     acarshub_logging.log(f"Main Connect: Error sending labels: {e}", "webapp")
+    #     acarshub_logging.acars_traceback(e, "webapp")
 
     msg_index = 1
+
     for json_message in list_of_recent_messages:
         if msg_index == len(list_of_recent_messages):
             recent_options["done_loading"] = True
