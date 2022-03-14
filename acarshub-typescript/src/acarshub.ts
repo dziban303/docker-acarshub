@@ -29,7 +29,7 @@ import {
   LiveMessagesPage,
   SettingsPage,
   LocalStorageSettings,
-  LocalStorageSettingsDisplayProperties,
+  message_properties,
 } from "./interfaces";
 
 // CSS loading
@@ -95,7 +95,9 @@ $(async (): Promise<void> => {
 
   socket.on("acars_msg", function (msg: html_msg) {
     // New acars message.
-    const processed_msg = msg_handler.acars_message(msg.msghtml);
+    const processed_msg: message_properties = msg_handler.acars_message(
+      msg.msghtml
+    );
 
     // If the message is a new message, then we need to update the page.
     if (
@@ -107,7 +109,8 @@ $(async (): Promise<void> => {
     } else if (
       typeof msg.done_loading === "undefined" &&
       current_page === "live_messages" &&
-      live_messages_page
+      live_messages_page &&
+      processed_msg.should_display
     ) {
       live_messages_page.update_page(
         msg_handler.get_message_by_id(processed_msg.uid)
@@ -126,10 +129,15 @@ $(async (): Promise<void> => {
   socket.on("terms", function (msg: alert_terms): void {
     settings.set_all_alert_terms(msg);
     msg_handler.scan_for_new_alerts();
+    const msgs = msg_handler.get_all_messages();
     if (current_page === "settings" && settings_page) {
       settings_page.update_alerts();
-    } else if (current_page == "live_messages" && live_messages_page) {
-      live_messages_page.update_page(msg_handler.get_all_messages(), false);
+    } else if (
+      current_page == "live_messages" &&
+      live_messages_page &&
+      msgs.length > 0
+    ) {
+      live_messages_page.update_page(msgs, false);
     }
   });
 
@@ -282,6 +290,10 @@ export function get_setting(key: string): string {
   return settings.get_setting(key);
 }
 
+export function is_label_excluded(label: string): boolean {
+  return settings.is_label_excluded(label);
+}
+
 export function get_all_settings(): LocalStorageSettings {
   return settings.get_all_settings();
 }
@@ -304,6 +316,7 @@ window.save_settings = async (): Promise<void> => {
   if (current_page === "settings" && settings_page) {
     settings_page.update_page();
   }
+
   socket.emit("update_alerts", settings.get_all_alert_terms(), "/main");
   init_adsb();
 };

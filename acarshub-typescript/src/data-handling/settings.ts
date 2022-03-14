@@ -139,6 +139,11 @@ export class Settings {
           );
           break;
         case "live_messages_page_exclude_labels":
+          let labels: Array<string> = [];
+          if (typeof value === "string") {
+            labels = value.split(",");
+          }
+          this.set_live_messages_page_exclude_labels(labels);
           break;
         case "live_messages_page_exclude_empty":
           this.set_live_messages_page_exclude_empty(
@@ -151,6 +156,10 @@ export class Settings {
       }
     }
     // save the value to the settings object
+  }
+
+  is_label_excluded(label: string): boolean {
+    return this.settings.live_messages_page_exclude_labels.includes(label);
   }
 
   get_all_settings() {

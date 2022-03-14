@@ -15,7 +15,7 @@
 // along with acarshub.  If not, see <http://www.gnu.org/licenses/>.
 
 import { MessageDecoder } from "@airframes/acars-decoder/dist/MessageDecoder";
-import { get_setting } from "../acarshub";
+import { get_setting, is_label_excluded } from "../acarshub";
 import {
   acars_msg,
   adsb,
@@ -24,6 +24,7 @@ import {
   planes_array,
   alert_terms,
   aircraft_position,
+  message_properties,
 } from "src/interfaces";
 import { AlertHandler } from "./alert_handler";
 
@@ -103,7 +104,8 @@ export class MessageHandler {
       // Or if the user has never interacted with the tab selection for this plane
       // Then we'll set the selected tab to the first message
       if (
-        this.planes[plane].messages.length == 1 ||
+        (this.should_display_message(this.planes[plane].messages[0]) &&
+          this.planes[plane].messages.length == 1) ||
         !this.planes[plane].manually_selected_tab
       ) {
         this.planes[plane].selected_tab = this.planes[plane].messages[0].uid;
@@ -120,6 +122,12 @@ export class MessageHandler {
     } else {
       let processed_message = this.update_plane_message(msg);
       const matched_terms = this.alert_handler.find_alerts(msg);
+      const msg_uid =
+        processed_message &&
+        processed_message[0] &&
+        this.should_display_message(processed_message[0])
+          ? msg.uid
+          : undefined;
       if (matched_terms && matched_terms.length > 0 && processed_message) {
         processed_message[0].matched = true;
         processed_message[0].matched_text = matched_terms;
@@ -135,7 +143,7 @@ export class MessageHandler {
         num_alerts: matched_terms && matched_terms.length > 0 ? 1 : 0,
         last_updated: 0,
         uid: this.getRandomInt(1000000).toString(),
-        selected_tab: msg.uid,
+        selected_tab: msg_uid,
         manually_selected_tab: false,
       });
     }
@@ -143,7 +151,50 @@ export class MessageHandler {
     return {
       uid: this.planes[0].uid,
       has_alerts: this.planes[0].messages[0].matched,
-    };
+      should_display: this.should_display_message(this.planes[0].messages[0]),
+    } as message_properties;
+  }
+
+  should_display_message(msg: acars_msg): boolean {
+    // The message matched an alert, we should display
+
+    if (msg.matched) {
+      return true;
+    }
+    // We are not doing any filtering, we should display
+    if (
+      Boolean(get_setting("live_messages_page_exclude_empty")) === false &&
+      get_setting("live_messages_page_exclude_labels").length === 0
+    ) {
+      return true;
+    }
+
+    // are we filtering by empty messages?
+    // if so, and the message is empty, don't display
+    if (
+      Boolean(get_setting("live_messages_page_exclude_empty")) === true &&
+      !this.is_not_empty(msg)
+    ) {
+      return false;
+    }
+
+    // are filtering by labels?
+    // if so, and the message containers a label in the list, don't display
+    if (
+      msg.label &&
+      get_setting("live_messages_page_exclude_labels").length > 0 &&
+      is_label_excluded(msg.label)
+    ) {
+      return false;
+    }
+    return true;
+  }
+
+  is_not_empty(message: acars_msg): boolean {
+    return !Object.values(this.msg_tags).every((tag) => {
+      if (tag in message) return false;
+      return true;
+    });
   }
 
   adsb_message(adsb_positions: adsb) {
@@ -526,7 +577,10 @@ export class MessageHandler {
 
     Object.values(this.planes).every((plane) => {
       if (plane.uid == id) {
-        output = [plane];
+        const found_plane = this.get_good_messages_by_plane(plane);
+        if (found_plane.msgs.length > 0) {
+          output = [plane];
+        }
         return false;
       }
       return true;
@@ -539,13 +593,47 @@ export class MessageHandler {
     let output = [] as plane[];
     const num_planes = Number(get_setting("live_messages_page_num_items"));
     Object.values(this.planes).every((plane) => {
-      if (plane.messages && plane.messages.length > 0) output.push(plane);
+      if (plane.messages && plane.messages.length > 0) {
+        // loop through all of the plane's messages to ensure we've got at least one good message
+        // that isn't going to get caught in the filters
 
+        const plane_messages = this.get_good_messages_by_plane(plane);
+        if (plane_messages.msgs.length > 0) {
+          // reset the selected tab if the selected tab wasn't found.
+          if (!plane_messages.found_selected_id) {
+            plane.selected_tab = plane_messages.msgs[0].uid;
+            plane.manually_selected_tab = false;
+          }
+          let clone: plane = {} as plane;
+          Object.assign(clone, plane);
+          clone.messages = plane_messages.msgs;
+          output.push(clone);
+        }
+      }
       if (output.length < num_planes) return true;
       return false;
     });
 
     return output;
+  }
+
+  get_good_messages_by_plane(plane: plane): {
+    msgs: Array<acars_msg>;
+    found_selected_id: boolean;
+  } {
+    let plane_messages: Array<acars_msg> = [];
+    let found_selected_id = false;
+    plane.messages.forEach((message) => {
+      if (this.should_display_message(message)) {
+        if (plane.selected_tab == message.uid) found_selected_id = true;
+        plane_messages.push(message);
+      }
+    });
+
+    return {
+      msgs: plane_messages,
+      found_selected_id: found_selected_id,
+    };
   }
 
   getRandomInt(max: number): number {

@@ -25,7 +25,7 @@ export interface plane {
   tail?: string;
   has_alerts: boolean;
   num_alerts: number;
-  selected_tab: string;
+  selected_tab?: string;
   manually_selected_tab: boolean;
   messages: acars_msg[];
   position?: adsb_plane;
@@ -257,6 +257,12 @@ export interface status_external_formats {
       type: string;
     }
   ];
+}
+
+export interface message_properties {
+  uid: string;
+  has_alerts: boolean;
+  should_display: boolean;
 }
 
 export interface LocalStorageSettings {
