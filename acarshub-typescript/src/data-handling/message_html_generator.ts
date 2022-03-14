@@ -1,10 +1,6 @@
 // Copyright (C) 2022 Frederick Clausen II
 // This file is part of acarshub <https://github.com/sdr-enthusiasts/docker-acarshub>.
 
-import { acars_msg, plane } from "src/interfaces";
-import { get_setting } from "../acarshub";
-import { feet_to_meters } from "./math_conversions";
-
 // acarshub is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
@@ -17,6 +13,10 @@ import { feet_to_meters } from "./math_conversions";
 
 // You should have received a copy of the GNU General Public License
 // along with acarshub.  If not, see <http://www.gnu.org/licenses/>.
+
+import { acars_msg, plane } from "src/interfaces";
+import { get_setting } from "../acarshub";
+import { feet_to_meters } from "./math_conversions";
 
 export function generate_messages_html_from_planes(
   planes: plane[] | undefined = undefined
