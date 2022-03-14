@@ -105,8 +105,8 @@ rootfs/webapp/static/images/1year.png
 rootfs/webapp/static/images/24hours.png
 rootfs/webapp/static/images/30days.png
 rootfs/webapp/static/images/6hour.png
-acarshub-typescript/node_modules/
-acarshub-typescript/dist/
+**/node_modules/
+**/dist/
 acarshub-typescript/dist-min/
 acarshub-typescript/css-min/
 rootfs/webapp/static/js/*.js
