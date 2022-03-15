@@ -112,6 +112,7 @@ $(async (): Promise<void> => {
 
   socket.on("acars_msg", function (msg: html_msg) {
     // New acars message.
+    console.log(JSON.stringify(msg));
     const processed_msg: message_properties = msg_handler.acars_message(
       msg.msghtml
     );
