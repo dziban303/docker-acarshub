@@ -1,0 +1,4 @@
+{
+  "extends": "./tsconfig.json",
+  "files": ["./src/data-handling/message_handler.ts"]
+}

@@ -26,6 +26,7 @@ let config = {
       },
       {
         test: /\.js$/,
+        exclude: /\.test.js$/,
         loader: "babel-loader",
         exclude: /(node_modules)/,
       },
