@@ -5,8 +5,8 @@
   "main": "index.js",
   "repository": "https://github.com/sdr-enthusiasts/docker-acarshub",
   "scripts": {
-    "build": "webpack --mode production",
-    "build-dev": "webpack --mode development",
+    "build": "npm run test && webpack --mode production",
+    "build-dev": "npm run test && webpack --mode development",
     "copy_test": "./copy_test_assets.sh",
     "installer": "./installer.sh"
   },
