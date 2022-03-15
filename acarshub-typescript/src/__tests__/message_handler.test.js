@@ -19,8 +19,12 @@ const fs = require("fs");
 const pth = require("path");
 
 jest.mock("../acarshub", () => ({
-  get_setting: jest.fn(() => "false"),
-  is_label_excluded: jest.fn(),
+  get_setting: jest.fn((setting) => {
+    if (setting === "live_messages_page_exclude_empty") return false;
+    if (setting === "live_messages_page_exclude_labels") return [];
+    if (setting === "live_messages_page_num_items") return 20;
+  }),
+  is_label_excluded: jest.fn(() => false),
   get_alerts: jest.fn(() => {
     return [];
   }),
@@ -33,14 +37,30 @@ try {
   );
   const messages = JSON.parse(data);
   const msg_handler = new MessageHandler.MessageHandler();
+  messages.forEach((message) => {
+    if (message) {
+      msg_handler.acars_message(message);
+    }
+  });
 
-  test("Load in all messages with no filtering", () => {
-    messages.forEach((message) => {
-      if (message) {
-        msg_handler.acars_message(message);
-      }
-    });
-    expect(msg_handler.planes.length).toBe(2);
+  test("First plane has expected number of messages", () => {
+    expect(msg_handler.planes[0].messages.length).toBe(1);
+  });
+  test("Second plane has expected number of messages", () => {
+    expect(msg_handler.planes[1].messages.length).toBe(1);
+  });
+  test("First plane should not be filtered", () => {
+    expect(
+      msg_handler.should_display_message(msg_handler.planes[0].messages[0])
+    ).toBe(true);
+  });
+  test("Second plane should not be filtered", () => {
+    expect(
+      msg_handler.should_display_message(msg_handler.planes[1].messages[0])
+    ).toBe(true);
+  });
+  test("All messages returns expected number of messages (no filtering)", () => {
+    expect(msg_handler.get_all_messages().length).toBe(2);
   });
 } catch (err) {
   console.log(err);
