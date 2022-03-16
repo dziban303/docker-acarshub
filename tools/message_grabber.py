@@ -40,7 +40,7 @@ from threading import Thread, Event
 sio = socketio.Client()
 
 ADSB_URL = "http://127.0.0.1/data/aircraft.json"
-ADSB_UPDATE_RATE = 5
+ADSB_UPDATE_RATE = 10
 
 output_messages = []
 acars_message_count = 0
@@ -64,8 +64,7 @@ def adsb_downloader():
                 output_messages.insert(
                     0,
                     {
-                        formatted_message["now"]: {
-                            "type": "adsb",
+                        "adsb": {
                             "message": formatted_message,
                         }
                     },
@@ -92,18 +91,17 @@ def on_message(data):
         output_messages.insert(
             0,
             {
-                data["msghtml"]["timestamp"]: {
-                    "type": "acars"
-                    if data["msghtml"]["message_type"] == "acars"
-                    else "vdlm",
-                    "message": data["msghtml"],
+                "acars"
+                if data["msghtml"]["message_type"] == "ACARS"
+                else "vdlm": {
+                    "msghtml": data["msghtml"],
                 }
             },
         )
         acars_message_count = acars_message_count + 1
         print(f"Received message #{acars_message_count}")
 
-        if acars_message_count >= 100:
+        if acars_message_count >= 50:
             print(f"Received {acars_message_count} messages")
             print("Writing file and exiting")
             adsb_downloader_event.set()
