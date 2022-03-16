@@ -101,7 +101,7 @@ def on_message(data):
         acars_message_count = acars_message_count + 1
         print(f"Received message #{acars_message_count}")
 
-        if acars_message_count >= 100:
+        if acars_message_count >= 50:
             print(f"Received {acars_message_count} messages")
             print("Writing file and exiting")
             adsb_downloader_event.set()
