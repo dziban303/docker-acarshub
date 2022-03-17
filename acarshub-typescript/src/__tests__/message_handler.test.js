@@ -32,14 +32,20 @@ jest.mock("../acarshub", () => ({
 
 try {
   const data = fs.readFileSync(
-    pth.join(__dirname, "../../data/messages.json"),
+    pth.join(__dirname, "../../data/acars_messages.json"),
     "utf8"
   );
   const messages = JSON.parse(data);
   const msg_handler = new MessageHandler.MessageHandler();
+
+  // Initial run with no ADSB
   messages.forEach((message) => {
     if (message) {
-      msg_handler.acars_message(message);
+      if (typeof message.vdlm !== "undefined") {
+        msg_handler.acars_message(message.vdlm);
+      } else if (typeof message.acars !== "undefined") {
+        msg_handler.acars_message(message.acars);
+      }
     }
   });
 
