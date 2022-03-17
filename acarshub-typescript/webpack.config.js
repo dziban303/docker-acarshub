@@ -4,6 +4,7 @@ const HtmlWebpackPlugin = require("html-webpack-plugin");
 const FaviconsWebpackPlugin = require("favicons-webpack-plugin");
 const InjectBodyPlugin = require("inject-body-webpack-plugin").default;
 const CopyPlugin = require("copy-webpack-plugin");
+const TerserPlugin = require("terser-webpack-plugin");
 
 let config = {
   entry: {
@@ -111,6 +112,7 @@ let config = {
     new CopyPlugin({
       patterns: [
         { from: "src/assets/images/acarshublogo.png", to: "../images" },
+        { from: "src/assets/sounds/alert.mp3", to: "../sounds" },
       ],
     }),
     new FaviconsWebpackPlugin({
@@ -209,6 +211,20 @@ module.exports = (env, argv) => {
   } else {
     config.devtool = "source-map";
     config.output.filename = "[name].[chunkhash].js";
+    config.optimization.minimize = true;
+    config.optimization.minimizer = [
+      new TerserPlugin({
+        terserOptions: {
+          sourceMap: true,
+          compress: {
+            drop_console: true,
+          },
+          output: {
+            comments: false,
+          },
+        },
+      }),
+    ];
   }
   config.experiments = config.experiments || {};
   config.experiments.topLevelAwait = true;

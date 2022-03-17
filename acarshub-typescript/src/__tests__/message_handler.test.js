@@ -66,7 +66,7 @@ try {
     ).toBe(true);
   });
   test("All messages returns expected number of messages (no filtering)", () => {
-    expect(msg_handler.get_all_messages().length).toBe(2);
+    expect(msg_handler.get_all_messages().length).toBe(20);
   });
 } catch (err) {
   console.log(err);
