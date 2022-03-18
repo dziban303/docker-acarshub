@@ -112,6 +112,7 @@ let config = {
     new CopyPlugin({
       patterns: [
         { from: "src/assets/images/acarshublogo.png", to: "../images" },
+        // FIXME: we shouldn't have to manually copy this file....why did it break all the sudden?
         { from: "src/assets/sounds/alert.mp3", to: "../sounds" },
       ],
     }),
