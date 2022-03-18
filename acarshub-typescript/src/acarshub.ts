@@ -14,8 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with acarshub.  If not, see <http://www.gnu.org/licenses/>.
 
-declare const window: any;
-
 import {
   system_status,
   html_msg,
@@ -30,7 +28,11 @@ import {
   SettingsPage,
   LocalStorageSettings,
   message_properties,
+  DocumentEventListeners,
 } from "./interfaces";
+
+declare const window: any;
+declare const document: DocumentEventListeners;
 
 // CSS loading
 
@@ -73,6 +75,21 @@ const settings = new Settings();
 let current_page: string | null = null;
 let settings_page: SettingsPage | undefined = undefined;
 
+var is_page_backgrounded = false;
+var hidden: string = "";
+var visibilityChange: string = "";
+if (typeof document.hidden !== "undefined") {
+  // Opera 12.10 and Firefox 18 and later support
+  hidden = "hidden";
+  visibilityChange = "visibilitychange";
+} else if (typeof document.msHidden !== "undefined") {
+  hidden = "msHidden";
+  visibilityChange = "msvisibilitychange";
+} else if (typeof document.webkitHidden !== "undefined") {
+  hidden = "webkitHidden";
+  visibilityChange = "webkitvisibilitychange";
+}
+
 $(async (): Promise<void> => {
   await detect_url();
   const menuIconButton = document.querySelector("[data-menu-icon-btn]");
@@ -95,31 +112,34 @@ $(async (): Promise<void> => {
 
   socket.on("acars_msg", function (msg: html_msg) {
     // New acars message.
-    console.log(JSON.stringify(msg));
     const processed_msg: message_properties = msg_handler.acars_message(
       msg.msghtml
     );
 
-    // If the message is a new message, then we need to update the page.
-    if (
-      msg.done_loading === true &&
-      current_page === "live_messages" &&
-      live_messages_page
-    ) {
-      live_messages_page.update_page(msg_handler.get_all_messages());
-    } else if (
-      typeof msg.done_loading === "undefined" &&
-      current_page === "live_messages" &&
-      live_messages_page &&
-      processed_msg.should_display
-    ) {
-      live_messages_page.update_page(
-        msg_handler.get_message_by_id(processed_msg.uid)
-      );
-    }
+    if (!is_page_backgrounded) {
+      // If the message is a new message, then we need to update the page.
+      if (
+        msg.done_loading === true &&
+        current_page === "live_messages" &&
+        live_messages_page
+      ) {
+        live_messages_page.update_page(msg_handler.get_all_messages());
+      } else if (
+        typeof msg.done_loading === "undefined" &&
+        current_page === "live_messages" &&
+        live_messages_page &&
+        processed_msg.should_display
+      ) {
+        live_messages_page.update_page(
+          msg_handler.get_message_by_id(processed_msg.uid)
+        );
+      }
 
-    if (typeof msg.done_loading === "undefined" && processed_msg.has_alerts) {
-      msg_handler.sound_alert();
+      if (typeof msg.done_loading === "undefined" && processed_msg.has_alerts) {
+        msg_handler.sound_alert();
+      }
+    } else {
+      console.log("Skipping update: page back grounded");
     }
   });
   // signal level graph
@@ -201,6 +221,24 @@ $(async (): Promise<void> => {
   } else if (current_page === "settings" && settings_page) {
     settings_page.set_page_active();
     settings_page.update_page();
+  }
+
+  if (
+    typeof document.addEventListener === "undefined" ||
+    hidden === undefined
+  ) {
+    console.error(
+      "This webapp requires a browser, such as Safari, Google Chrome or Firefox, that supports the Page Visibility API."
+    );
+  } else {
+    document.addEventListener(
+      visibilityChange,
+      () => {
+        is_page_backgrounded = document[hidden];
+        toggle_pages(document[hidden]);
+      },
+      false
+    );
   }
 
   load_all_pages();
@@ -285,6 +323,24 @@ async function update_adsb(): Promise<void> {
       adsb_getting_data = false;
       console.error(err);
     });
+}
+
+function toggle_pages(is_backgrounded = false) {
+  if (is_backgrounded) {
+    if (current_page == "live_messages" && live_messages_page) {
+      live_messages_page.set_page_inactive();
+    } else if (current_page == "settings" && settings_page) {
+      settings_page.set_page_inactive();
+    }
+  } else {
+    if (current_page == "live_messages" && live_messages_page) {
+      live_messages_page.set_page_active();
+      console.log("Page was backgrounded, updating");
+      live_messages_page.update_page(msg_handler.get_all_messages(), false);
+    } else if (current_page == "settings" && settings_page) {
+      settings_page.set_page_active();
+    }
+  }
 }
 
 export function get_setting(key: string): string {

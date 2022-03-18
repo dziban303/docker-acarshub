@@ -324,3 +324,9 @@ export interface SettingsPage {
   set_page_active(): void;
   update_alerts(): void;
 }
+
+export interface DocumentEventListeners extends Document {
+  msHidden: boolean;
+  webkitHidden: boolean;
+  [index: string]: any;
+}
