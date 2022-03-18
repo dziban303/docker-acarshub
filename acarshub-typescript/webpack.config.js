@@ -207,10 +207,8 @@ let config = {
 
 module.exports = (env, argv) => {
   if (argv.mode === "development") {
-    config.devtool = "source-map";
     config.output.filename = "[name].js";
   } else {
-    config.devtool = "source-map";
     config.output.filename = "[name].[chunkhash].js";
     config.optimization.minimize = true;
     config.optimization.minimizer = [
@@ -227,6 +225,7 @@ module.exports = (env, argv) => {
       }),
     ];
   }
+  config.devtool = "source-map";
   config.experiments = config.experiments || {};
   config.experiments.topLevelAwait = true;
   return config;
