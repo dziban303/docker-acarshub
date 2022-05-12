@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with acarshub.  If not, see <http://www.gnu.org/licenses/>.
 
-import { get_setting } from "../acarshub";
+import { get_all_planes, get_setting } from "../acarshub";
 import { acars_msg, plane } from "src/interfaces";
 import {
   generate_messages_html_from_planes,
@@ -24,6 +24,7 @@ import { Page } from "./pages";
 
 export class LiveMessagesPage extends Page {
   current_message_string: string = "";
+  page_updates_paused = false;
 
   constructor() {
     super("Live Messages");
@@ -31,11 +32,25 @@ export class LiveMessagesPage extends Page {
 
   set_page_active(): void {
     this.update_title_bar();
-    $(this.content_area).html("Welcome to ACARS Hub. Waiting for data...");
+
+    if (!this.current_message_string) {
+      $(this.content_area).html("Welcome to ACARS Hub. Waiting for data...");
+    } else {
+      $(this.content_area).html(this.current_message_string);
+    }
+
+    $(document).on("keyup", (event: any) => {
+      // key code for escape is 27
+      if (event.keyCode == 80)
+        this.page_updates_paused = !this.page_updates_paused;
+
+      if (!this.page_updates_paused) this.update_page(get_all_planes(), false);
+      // TODO: Indicate on the page that updates are paused
+    });
   }
 
   set_page_inactive(): void {
-    this.current_message_string = "";
+    $(document).off("keyup");
   }
 
   update_page_in_place(planes: plane[] | undefined = undefined) {
@@ -53,6 +68,9 @@ export class LiveMessagesPage extends Page {
       $(this.content_area).html("No data received yet.");
       return;
     }
+
+    if (this.page_updates_paused) return;
+
     const num_planes = Number(get_setting("live_messages_page_num_items"));
     if (this.current_message_string && dont_reset_page) {
       $(`#${planes[0].uid}_container`).remove();

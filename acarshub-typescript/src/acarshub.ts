@@ -379,6 +379,10 @@ export function get_display_settings() {
   return settings.get_display_settings();
 }
 
+export function get_all_planes() {
+  return msg_handler.get_all_messages();
+}
+
 export function get_alerts() {
   return {
     ignore: settings.get_alerts_list_of_blacklist_terms(),
