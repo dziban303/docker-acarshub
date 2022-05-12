@@ -325,6 +325,12 @@ export interface SettingsPage {
   update_alerts(): void;
 }
 
+export interface LiveMapPage {
+  update_page(): void;
+  set_page_inactive(): void;
+  set_page_active(): void;
+}
+
 export interface DocumentEventListeners extends Document {
   msHidden: boolean;
   webkitHidden: boolean;

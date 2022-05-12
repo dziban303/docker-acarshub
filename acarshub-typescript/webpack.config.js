@@ -151,8 +151,8 @@ let config = {
               <div class="hidden-sidebar">Live Messages</div>
             </a>
           </li>
-          <li class="sidebar-list-item">
-            <a href="#" class="sidebar-link">
+          <li class="sidebar-list-item" id="live_map_link">
+            <a href="javascript:sidebar_nav_link('live_map')" class="sidebar-link">
               <svg viewbox="0 0 24 24" class="sidebar-icon" preserveaspectratio="xMidYMid meet" focusable="false"><g><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8 12.5v-9l6 4.5-6 4.5z"></path></g></svg>
               <div class="hidden-sidebar">Live Map</div>
             </a>

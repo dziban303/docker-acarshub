@@ -29,6 +29,7 @@ import {
   LocalStorageSettings,
   message_properties,
   DocumentEventListeners,
+  LiveMapPage,
 } from "./interfaces";
 
 declare const window: any;
@@ -74,6 +75,7 @@ let live_messages_page: LiveMessagesPage | undefined = undefined;
 const settings = new Settings();
 let current_page: string | null = null;
 let settings_page: SettingsPage | undefined = undefined;
+let live_map_page: LiveMapPage | undefined = undefined;
 
 var is_page_backgrounded = false;
 var hidden: string = "";
@@ -221,6 +223,8 @@ $(async (): Promise<void> => {
   } else if (current_page === "settings" && settings_page) {
     settings_page.set_page_active();
     settings_page.update_page();
+  } else if (current_page === "live_map" && live_map_page) {
+    live_map_page.set_page_active();
   }
 
   if (
@@ -249,18 +253,29 @@ async function detect_url() {
   const urlParams = new URLSearchParams(queryString);
   const url = urlParams.get("page");
   $(".sidebar-list-item").removeClass("active");
-  if (url && url !== "live_messages") {
-    if (url == "settings") {
-      const { SettingsPage } = await import("./pages/settings_page");
-      settings_page = new SettingsPage();
-      current_page = "settings";
-      $("#settings_link").addClass("active");
-    }
-  } else {
+  // Load default page if no page is selected
+  if (!url || url === "live_messages") {
     const { LiveMessagesPage } = await import("./pages/live_messages_page");
     live_messages_page = new LiveMessagesPage();
     current_page = "live_messages";
     $("#live_messages_link").addClass("active");
+  }
+
+  switch (url) {
+    case "settings":
+      const { SettingsPage } = await import("./pages/settings_page");
+      settings_page = new SettingsPage();
+      current_page = "settings";
+      $("#settings_link").addClass("active");
+      break;
+    case "live_map":
+      const { LiveMapPage } = await import("./pages/live_map_page");
+      live_map_page = new LiveMapPage();
+      current_page = "live_map";
+      $("#live_map_link").addClass("active");
+    default:
+      console.error("No page set. Loading LiveMessagesPage");
+    // TODO: Move all of these loaders in to their own function
   }
 }
 
@@ -273,6 +288,11 @@ async function load_all_pages() {
   if (!settings_page) {
     const { SettingsPage } = await import("./pages/settings_page");
     settings_page = new SettingsPage();
+  }
+
+  if (!live_map_page) {
+    const { LiveMapPage } = await import("./pages/live_map_page");
+    live_map_page = new LiveMapPage();
   }
 }
 
@@ -425,6 +445,16 @@ window.sidebar_nav_link = (
       $("#settings_link").addClass("active");
       params = "?page=settings";
       title = "ACARS Hub: Settings";
+    }
+  } else if (page_id === "live_map") {
+    current_page = "live_map";
+    if (live_map_page) {
+      live_map_page.set_page_inactive();
+      live_map_page.set_page_active();
+      live_map_page.update_page();
+      $("#live_map_link").addClass("active");
+      params = "?page=live_map";
+      title = "ADSB Live Map";
     }
   }
 
