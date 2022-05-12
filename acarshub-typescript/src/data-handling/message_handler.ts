@@ -86,7 +86,14 @@ export class MessageHandler {
     const callsign = this.get_callsign_from_acars(msg);
     const hex = this.get_hex_from_acars(msg);
     const tail = this.get_tail_from_acars(msg);
-    const plane = this.match_plane_from_id(callsign, hex, tail);
+    const squitter = this.get_squitter_from_acars(msg);
+    const plane = this.match_plane_from_id(
+      callsign,
+      hex,
+      tail,
+      undefined,
+      squitter
+    );
 
     if (typeof plane !== "undefined") {
       this.update_plane_message(msg, plane);
@@ -136,6 +143,7 @@ export class MessageHandler {
         callsign: callsign,
         hex: hex,
         tail: tail,
+        squitter: squitter,
         position: undefined,
         position_history: [] as Array<aircraft_position>,
         messages: processed_message ? processed_message : [],
@@ -460,10 +468,11 @@ export class MessageHandler {
     callsign: string | null = null,
     hex: string | null = null,
     tail: string | null = null,
-    uid: string | null = null
+    uid: string | null = null,
+    squitter: string | null = null
   ): undefined | number {
     // make sure we have some kind of value to match with
-    if (!callsign && !hex && !tail && !uid) return undefined;
+    if (!callsign && !hex && !tail && !uid && !squitter) return undefined;
 
     let plane_index = undefined;
 
@@ -484,6 +493,12 @@ export class MessageHandler {
         plane_index = index;
         return false;
       }
+
+      if (squitter && plane.squitter == squitter) {
+        plane_index = index;
+        return false;
+      }
+
       return true;
     });
     return plane_index;
@@ -516,6 +531,10 @@ export class MessageHandler {
   get_tail_from_acars(msg: acars_msg): string | undefined {
     if (msg.tail) return msg.tail.toUpperCase();
     return undefined;
+  }
+
+  get_squitter_from_acars(msg: acars_msg): string | undefined {
+    if (msg.label && msg.label === "SQ" && msg.text) return msg.text;
   }
 
   get_sqwk(plane: adsb_plane): number {

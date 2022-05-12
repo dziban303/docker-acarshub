@@ -23,6 +23,7 @@ export interface plane {
   callsign?: string;
   hex?: string;
   tail?: string;
+  squitter?: string;
   has_alerts: boolean;
   num_alerts: number;
   selected_tab?: string;
